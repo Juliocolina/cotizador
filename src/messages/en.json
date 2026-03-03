@@ -1,0 +1,11 @@
+{
+  "HomePage": {
+    "title": "My Mexican Dream Quote Tool",
+    "subtitle": "Calculate the value of your future land",
+    "form": {
+      "name": "Full Name",
+      "phone": "Phone Number",
+      "calculate": "Generate Quote"
+    }
+  }
+}

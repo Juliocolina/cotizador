@@ -1,0 +1,12 @@
+
+{
+  "HomePage": {
+    "title": "Cotizador Mi Sueño Mexicano",
+    "subtitle": "Calcula el valor de tu futuro terreno",
+    "form": {
+      "name": "Nombre completo",
+      "phone": "Teléfono",
+      "calculate": "Generar Cotización"
+    }
+  }
+}
