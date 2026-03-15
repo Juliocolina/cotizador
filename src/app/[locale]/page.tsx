@@ -28,7 +28,7 @@ export default function HomePage({ params }: PageProps) {
   const mensualidad = (total - engancheEfectivo) / plazoMSI;
 
   // --- 3. ESTADOS DEL FLUJO (PASOS) ---
-  // 0 = Vista 0.1 (El Gancho), 0.5 = Vista 0.2 (La Configuración), 1 = Consentimiento, 2 = Datos, 3 = Email/Notas, 4 = Éxito
+  // 0 = Cotizador, 1 = Consentimiento, 2 = Datos, 3 = Email/Notas, 4 = Éxito
   const [pasoActual, setPasoActual] = useState(0); 
 
   // --- 4. ESTADOS DEL LEAD ---
@@ -97,7 +97,7 @@ export default function HomePage({ params }: PageProps) {
         <div className="p-8">
           
           {/* ========================================== */}
-          {/* VISTA 0.1: EL GANCHO (Engagement)          */}
+          {/* PASO 0: COTIZADOR COMPLETO                  */}
           {/* ========================================== */}
           {pasoActual === 0 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
@@ -125,18 +125,6 @@ export default function HomePage({ params }: PageProps) {
                 </select>
               </div>
 
-              <button disabled={!ubicacion} onClick={() => setPasoActual(0.5)} className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-tighter hover:bg-blue-500 hover:text-white transition-all disabled:opacity-20 active:scale-95 shadow-xl">Continuar a Dimensiones</button>
-            </div>
-          )}
-
-          {/* ========================================== */}
-          {/* VISTA 0.2: LA CONFIGURACIÓN (Technical)    */}
-          {/* ========================================== */}
-          {pasoActual === 0.5 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
-              
-              <button onClick={() => setPasoActual(0)} className="text-neutral-500 text-xs hover:text-white">← Volver</button>
-
               <div className="space-y-3">
                 <div className="flex justify-between text-[10px] font-black text-neutral-500 uppercase tracking-widest">
                   <span>{t('metros')}</span>
@@ -156,7 +144,7 @@ export default function HomePage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* PANEL RESULTADOS (PUERTA) */}
+              {/* PANEL RESULTADOS */}
               <div className="rounded-[2rem] p-6 border bg-neutral-950 border-blue-500/30 shadow-2xl scale-105 transition-all duration-700">
                 <div className="space-y-4 animate-in zoom-in-95 duration-500">
                   <div className="flex justify-between items-end">
@@ -178,7 +166,7 @@ export default function HomePage({ params }: PageProps) {
                 </button>
               </div>
 
-              <button onClick={() => setPasoActual(1)} className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-tighter hover:bg-blue-500 hover:text-white transition-all active:scale-95 shadow-xl">{t('botonFolio')}</button>
+              <button disabled={!ubicacion} onClick={() => setPasoActual(1)} className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-tighter hover:bg-blue-500 hover:text-white transition-all disabled:opacity-20 active:scale-95 shadow-xl">{t('botonFolio')}</button>
             </div>
           )}
 
@@ -198,7 +186,7 @@ export default function HomePage({ params }: PageProps) {
                   <h2 className="text-2xl font-bold">¿Aseguramos este precio?</h2>
                   <p className="text-neutral-400 text-sm">Al generar tu folio, bloqueamos la mensualidad de <b>${mensualidad.toLocaleString()}</b> por 48 horas.</p>
                   <button onClick={() => setPasoActual(2)} className="w-full bg-blue-600 py-5 rounded-2xl font-black uppercase">Sí, obtener folio</button>
-                  <button onClick={() => setPasoActual(0.5)} className="text-neutral-500 text-xs font-bold uppercase tracking-widest">Regresar al cotizador</button>
+                  <button onClick={() => setPasoActual(0)} className="text-neutral-500 text-xs font-bold uppercase tracking-widest">Regresar al cotizador</button>
                 </div>
               )}
 
