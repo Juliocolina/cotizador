@@ -1,11 +1,23 @@
-
 {
   "HomePage": {
     "title": "Cotizador Mi Sueño Mexicano",
     "subtitle": "Calcula el valor de tu futuro terreno",
+    "bienvenida": "¡Hola! Soy tu guía. Elige una ubicación.",
+    "sueño": "1. ¿Qué quieres construir?",
+    "ubicacion": "2. Ubicación",
+    "metros": "3. Tamaño del lote",
+    "botonFolio": "Generar Folio de Apartado",
+    "msi48": "¡Gran elección! Tienes 48 meses sin intereses.",
+    "puertaCerrada": "Selecciona ubicación para abrir precios",
+    "seleccionaDesarrollo": "Selecciona desarrollo...",
+    "mensualidad": "Mensualidad",
+    "enganche": "Enganche",
+    "total": "Total",
+    "meses": "meses",
     "form": {
       "name": "Nombre completo",
       "phone": "Teléfono",
+      "email": "Correo electrónico",
       "calculate": "Generar Cotización"
     }
   }

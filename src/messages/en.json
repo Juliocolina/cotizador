@@ -2,9 +2,22 @@
   "HomePage": {
     "title": "My Mexican Dream Quote Tool",
     "subtitle": "Calculate the value of your future land",
+    "bienvenida": "Hi! I'm your guide. Choose a location.",
+    "sueño": "1. What do you want to build?",
+    "ubicacion": "2. Location",
+    "metros": "3. Lot size",
+    "botonFolio": "Generate Booking Folio",
+    "msi48": "Great choice! You have 48 months interest-free.",
+    "puertaCerrada": "Select a location to unlock prices",
+    "seleccionaDesarrollo": "Select development...",
+    "mensualidad": "Monthly payment",
+    "enganche": "Down payment",
+    "total": "Total",
+    "meses": "months",
     "form": {
       "name": "Full Name",
       "phone": "Phone Number",
+      "email": "Email address",
       "calculate": "Generate Quote"
     }
   }
