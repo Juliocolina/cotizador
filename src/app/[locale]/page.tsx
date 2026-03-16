@@ -21,10 +21,10 @@ export default function HomePage({ params }: PageProps) {
   const [porcentajeEnganche, setPorcentajeEnganche] = useState(0.10); // A5.9
 
   // --- 2. CÁLCULOS DINÁMICOS ---
-  const precioM2 = moneda === 'MXN' ? 1500 : 85; 
+  const precioM2 = moneda === 'MXN' ? 1500 : 85;
   const total = metros * precioM2;
   const engancheEfectivo = total * porcentajeEnganche;
-  const plazoMSI = metros <= 200 ? 36 : 48; 
+  const plazoMSI = metros <= 200 ? 36 : 48;
   const mensualidad = (total - engancheEfectivo) / plazoMSI;
 
   // --- 3. ESTADOS DEL FLUJO (PASOS) ---
@@ -38,16 +38,36 @@ export default function HomePage({ params }: PageProps) {
   const [notas, setNotas] = useState('');
   const [esMismoWhatsApp, setEsMismoWhatsApp] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [menuAbierto, setMenuAbierto] = useState(false);
   const [resultado, setResultado] = useState<{ folio_texto: string } | null>(null);
 
   const WHATSAPP_ALFONSO = "584121209510";
 
-  // --- 5. LÓGICA DEL GUARDIÁN (A3) ---
-  const obtenerMensajeGuardian = () => {
-    if (!ubicacion) return locale === 'es' ? "¡Hola! Elige una ubicación para ver los precios." : "Hi! Choose a location to see the prices.";
-    if (metros > 200) return locale === 'es' ? "¡Gran elección! Por el tamaño tienes 48 meses sin intereses." : "Great choice! For this size you get 48 months interest-free.";
-    return locale === 'es' ? "Todo listo para generar tu folio." : "Everything is ready to generate your folio.";
+  // --- 5. MÁQUINA DE ESTADOS DEL GUARDIÁN (A3) ---
+  const obtenerEstadoGuardian = (): { img: string; msg: string } => {
+    const es = locale === 'es';
+
+    // Paso 4: Éxito
+    if (pasoActual === 4) return { img: 'Celebrando.png', msg: es ? '¡Felicidades! Tu sueño está en marcha.' : 'Congratulations! Your dream is on its way.' };
+    // Paso 3: Último paso
+    if (pasoActual === 3) return { img: 'guino_ojo.png', msg: es ? '¡Ya casi! Solo un paso más.' : 'Almost there! Just one more step.' };
+    // Paso 2: Datos
+    if (pasoActual === 2) return { img: 'feliz.png', msg: es ? 'Tus datos están seguros conmigo.' : 'Your data is safe with me.' };
+    // Paso 1: Consentimiento
+    if (pasoActual === 1) return { img: 'asintiendo.png', msg: es ? '¡Excelente decisión! Aseguremos tu precio.' : 'Excellent decision! Let\'s lock your price.' };
+
+    // Paso 0: Cotizador — prioridad de triggers
+    if (!ubicacion) return { img: 'saludando.png', msg: es ? '¡Hola! Elige una ubicación para comenzar.' : 'Hi! Choose a location to get started.' };
+    if (porcentajeEnganche === 0.01) return { img: 'contando_pesos.png', msg: es ? '¡Solo 1%! Así se empieza un sueño.' : 'Just 1%! That\'s how a dream begins.' };
+    if (porcentajeEnganche === 0.05) return { img: 'pensando_futuro.png', msg: es ? '5% de enganche, ¡buen balance!' : '5% down payment, great balance!' };
+    if (metros > 200) return { img: 'sorprendido.png', msg: es ? '¡Wow! Por ese tamaño tienes 48 meses sin intereses.' : 'Wow! For that size you get 48 months interest-free.' };
+    if (tipoSueño === 'Casa') return { img: 'echando_porras.png', msg: es ? '¡Alistemos maletas, nos mudamos!' : 'Pack your bags, we\'re moving!' };
+    if (tipoSueño === 'Negocio') return { img: 'jefe.png', msg: es ? '¡Un empresario visionario! Gran jugada.' : 'A visionary entrepreneur! Great move.' };
+    if (tipoSueño === 'Lote habitacional') return { img: 'presentandose.png', msg: es ? 'Todo empezó con un lotesito.' : 'It all started with a little lot.' };
+    return { img: 'senalando_boton.png', msg: es ? 'Todo listo. ¡Genera tu folio!' : 'All set. Generate your folio!' };
   };
+
+  const guardian = obtenerEstadoGuardian();
 
   const enviarCotizacion = async () => {
     setLoading(true);
@@ -75,21 +95,44 @@ export default function HomePage({ params }: PageProps) {
     <main className="min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center p-4 font-sans">
       <div className="w-full max-w-md bg-neutral-900 rounded-[2.5rem] border border-neutral-800 shadow-2xl overflow-hidden relative transition-all duration-500">
         
-        {/* HEADER ESTATICO */}
-        <div className="p-6 border-b border-neutral-800 flex justify-between items-center bg-neutral-900/50">
-          <h2 className="font-bold italic text-xl tracking-tighter uppercase">MSM <span className="text-blue-500 italic">LIVE</span></h2>
-          <div className="flex gap-3 items-center">
-            <Link href="/es" className={`text-xs font-bold px-3 py-1 rounded-lg transition-all ${locale === 'es' ? 'bg-white text-black' : 'text-neutral-500 hover:text-white'}`}>ES</Link>
-            <Link href="/en" className={`text-xs font-bold px-3 py-1 rounded-lg transition-all ${locale === 'en' ? 'bg-white text-black' : 'text-neutral-500 hover:text-white'}`}>EN</Link>
+        {/* HEADER */}
+        <div className="p-4 border-b border-neutral-800 flex justify-between items-center bg-neutral-900/50">
+          <div className="flex items-center gap-3">
+            <img src="/logo-fondo-blanco.png" alt="Mi Sueño Mexicano" className="w-10 h-10 rounded-full object-contain cursor-pointer" onClick={() => { setPasoActual(0); setUbicacion(''); setNombre(''); setTelefono(''); setEmail(''); setNotas(''); setResultado(null); }} />
+            <div>
+              <h1 className="text-sm font-black text-white leading-none">Mi Sueño Mexicano</h1>
+              <p className="text-[9px] text-neutral-500 italic">Tu terreno, tu futuro</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/es" className={`text-[10px] font-bold px-2 py-1 rounded-md transition-all ${locale === 'es' ? 'bg-white text-black' : 'text-neutral-500 hover:text-white'}`}>ES</Link>
+            <Link href="/en" className={`text-[10px] font-bold px-2 py-1 rounded-md transition-all ${locale === 'en' ? 'bg-white text-black' : 'text-neutral-500 hover:text-white'}`}>EN</Link>
+            <button onClick={() => setMenuAbierto(!menuAbierto)} className="p-2 hover:bg-neutral-800 rounded-lg transition-all ml-1">
+              <div className="space-y-1">
+                <div className="w-5 h-0.5 bg-white" />
+                <div className="w-5 h-0.5 bg-white" />
+                <div className="w-5 h-0.5 bg-white" />
+              </div>
+            </button>
           </div>
         </div>
 
-        {/* EL GUARDIÁN DINÁMICO (A3) */}
+        {/* DRAWER MENU */}
+        {menuAbierto && (
+          <div className="bg-neutral-900 border-b border-neutral-800 p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
+            <a href="#" className="block text-sm text-neutral-400 hover:text-white transition-all">{t('menu.servicio')}</a>
+            <a href="#" className="block text-sm text-neutral-400 hover:text-white transition-all">{t('menu.hogar')}</a>
+            <a href="#" className="block text-sm text-neutral-400 hover:text-white transition-all">{t('menu.cotizacion')}</a>
+            <a href="#" className="block text-sm text-neutral-400 hover:text-white transition-all">{t('menu.contacto')}</a>
+          </div>
+        )}
+
+        {/* EL GUARDIÁN DEL SUEÑO (A3) */}
         {pasoActual < 4 && (
           <div className="px-8 pt-6">
             <div className="bg-blue-600/10 border border-blue-600/20 p-4 rounded-2xl flex gap-3 items-center">
-              <span className="text-xl animate-pulse">✨</span>
-              <p className="text-[11px] text-blue-300 font-bold leading-tight">{obtenerMensajeGuardian()}</p>
+              <img src={`/guardian/${guardian.img}`} alt="Guardián" className="w-14 h-14 object-contain flex-shrink-0" />
+              <p className="text-[11px] text-blue-300 font-bold leading-tight">{guardian.msg}</p>
             </div>
           </div>
         )}
@@ -104,7 +147,6 @@ export default function HomePage({ params }: PageProps) {
               
               <div className="text-center mb-6">
                 <h1 className="text-2xl font-bold">{t('title')}</h1>
-                <p className="text-neutral-400 text-sm mt-1">{t('subtitle')}</p>
               </div>
 
               <div className="space-y-2">
@@ -221,7 +263,7 @@ export default function HomePage({ params }: PageProps) {
           {/* ========================================== */}
           {pasoActual === 4 && resultado && (
             <div className="text-center space-y-8 animate-in zoom-in duration-500">
-              <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center text-3xl mx-auto border border-green-500/30">✓</div>
+              <img src="/guardian/Celebrando.png" alt="Celebrando" className="w-24 h-24 object-contain mx-auto" />
               <div className="space-y-2">
                 <h2 className="text-3xl font-black tracking-tighter italic">¡FOLIO LISTO!</h2>
                 <div className="bg-neutral-950 py-8 rounded-[2.5rem] border border-blue-500/30">

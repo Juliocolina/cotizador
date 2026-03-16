@@ -1,7 +1,7 @@
 {
   "HomePage": {
-    "title": "My Mexican Dream Quote Tool",
-    "subtitle": "Calculate the value of your future land",
+    "title": "Live Quoter",
+    "subtitle": "",
     "bienvenida": "Hi! I'm your guide. Choose a location.",
     "sueño": "1. What do you want to build?",
     "ubicacion": "2. Location",
@@ -14,6 +14,12 @@
     "enganche": "Down payment",
     "total": "Total",
     "meses": "months",
+    "menu": {
+      "servicio": "Service",
+      "hogar": "Home",
+      "cotizacion": "Get a quote",
+      "contacto": "Contact us"
+    },
     "form": {
       "name": "Full Name",
       "phone": "Phone Number",

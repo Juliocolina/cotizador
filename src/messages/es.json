@@ -1,7 +1,7 @@
 {
   "HomePage": {
-    "title": "Cotizador Mi Sueño Mexicano",
-    "subtitle": "Calcula el valor de tu futuro terreno",
+    "title": "Cotizador en Vivo",
+    "subtitle": "",
     "bienvenida": "¡Hola! Soy tu guía. Elige una ubicación.",
     "sueño": "1. ¿Qué quieres construir?",
     "ubicacion": "2. Ubicación",
@@ -14,6 +14,12 @@
     "enganche": "Enganche",
     "total": "Total",
     "meses": "meses",
+    "menu": {
+      "servicio": "Servicio",
+      "hogar": "Hogar",
+      "cotizacion": "Obtenga cotización",
+      "contacto": "Contáctenos"
+    },
     "form": {
       "name": "Nombre completo",
       "phone": "Teléfono",
