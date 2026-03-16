@@ -39,6 +39,7 @@ export default function HomePage({ params }: PageProps) {
   const [esMismoWhatsApp, setEsMismoWhatsApp] = useState(true);
   const [loading, setLoading] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [idiomaAbierto, setIdiomaAbierto] = useState(false);
   const [resultado, setResultado] = useState<{ folio_texto: string } | null>(null);
 
   const WHATSAPP_ALFONSO = "584121209510";
@@ -105,9 +106,18 @@ export default function HomePage({ params }: PageProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/es" className={`text-[10px] font-bold px-2 py-1 rounded-md transition-all ${locale === 'es' ? 'bg-white text-black' : 'text-neutral-500 hover:text-white'}`}>ES</Link>
-            <Link href="/en" className={`text-[10px] font-bold px-2 py-1 rounded-md transition-all ${locale === 'en' ? 'bg-white text-black' : 'text-neutral-500 hover:text-white'}`}>EN</Link>
-            <button onClick={() => setMenuAbierto(!menuAbierto)} className="p-2 hover:bg-neutral-800 rounded-lg transition-all ml-1">
+            <div className="relative">
+              <button onClick={() => setIdiomaAbierto(!idiomaAbierto)} className="text-[10px] font-bold px-2 py-1 rounded-md bg-neutral-800 border border-neutral-700 hover:border-blue-500 transition-all flex items-center gap-1">
+                {locale.toUpperCase()} <span className="text-[8px]">{idiomaAbierto ? '▲' : '▼'}</span>
+              </button>
+              {idiomaAbierto && (
+                <div className="absolute top-8 right-0 bg-neutral-800 border border-neutral-700 rounded-lg overflow-hidden z-50 shadow-xl">
+                  <Link href="/es" className={`block px-4 py-2 text-[10px] font-bold transition-all ${locale === 'es' ? 'bg-blue-600 text-white' : 'text-neutral-400 hover:bg-neutral-700 hover:text-white'}`}>Español</Link>
+                  <Link href="/en" className={`block px-4 py-2 text-[10px] font-bold transition-all ${locale === 'en' ? 'bg-blue-600 text-white' : 'text-neutral-400 hover:bg-neutral-700 hover:text-white'}`}>English</Link>
+                </div>
+              )}
+            </div>
+            <button onClick={() => setMenuAbierto(!menuAbierto)} className="p-2 hover:bg-neutral-800 rounded-lg transition-all">
               <div className="space-y-1">
                 <div className="w-5 h-0.5 bg-white" />
                 <div className="w-5 h-0.5 bg-white" />
