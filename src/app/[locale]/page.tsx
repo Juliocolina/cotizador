@@ -14,20 +14,21 @@ export default function HomePage({ params }: PageProps) {
   const t = useTranslations('HomePage');
 
   // --- 1. ESTADOS DE LA MESA DE DISEÑO (JUEGO) ---
-  const [tipoSueño, setTipoSueño] = useState('Lote habitacional'); // A5.1
+  const [tipoSueño, setTipoSueño] = useState(''); // A5.1
   const [ubicacion, setUbicacion] = useState(''); // A5.2
   const [moneda, setMoneda] = useState('MXN'); // A5.13
   const [metros, setMetros] = useState(140); // A5.10
-  const [porcentajeEnganche, setPorcentajeEnganche] = useState(0.10); // A5.9
+  const [porcentajeEnganche, setPorcentajeEnganche] = useState(0); // A5.9
+  const [ultimaAccion, setUltimaAccion] = useState('');
 
   // --- 2. CÁLCULOS DINÁMICOS ---
-  const [plazoTipo, setPlazoTipo] = useState('30_años');
+  const [plazoTipo, setPlazoTipo] = useState('');
 
   const obtenerMeses = () => {
     if (plazoTipo === 'contado') return 1;
     if (plazoTipo === '20_años') return 240;
     if (plazoTipo === '30_años') return 360;
-    return 36;
+    return 0;
   };
 
   const mesesFinal = obtenerMeses();
@@ -60,26 +61,38 @@ export default function HomePage({ params }: PageProps) {
   const obtenerEstadoGuardian = (): { img: string; msg: string } => {
     const es = locale === 'es';
 
-    // Paso 4: Éxito
+    // Pasos del flujo (siempre tienen prioridad máxima)
     if (pasoActual === 4) return { img: 'Celebrando.png', msg: es ? '¡Felicidades! Tu sueño está en marcha.' : 'Congratulations! Your dream is on its way.' };
-    // Paso 3: Último paso
     if (pasoActual === 3) return { img: 'guino_ojo.png', msg: es ? '¡Ya casi! Solo un paso más.' : 'Almost there! Just one more step.' };
-    // Paso 2: Datos
     if (pasoActual === 2) return { img: 'feliz.png', msg: es ? 'Tus datos están seguros conmigo.' : 'Your data is safe with me.' };
-    // Paso 1: Consentimiento
     if (pasoActual === 1) return { img: 'asintiendo.png', msg: es ? '¡Excelente decisión! Aseguremos tu precio.' : 'Excellent decision! Let\'s lock your price.' };
 
-    // Paso 0: Cotizador — prioridad de triggers
-    if (!ubicacion) return { img: 'saludando.png', msg: es ? '¡Hola! Elige una ubicación para comenzar.' : 'Hi! Choose a location to get started.' };
-    if (plazoTipo === '30_años') return { img: 'pensando_futuro.png', msg: es ? 'Plazo ideal. Olvídate del crédito bancario.' : 'Ideal term. Forget about bank credit.' };
-    if (plazoTipo === '20_años') return { img: 'guino_ojo.png', msg: es ? '¡Buena elección! No revisaremos tu Buró.' : 'Great choice! We won\'t check your credit score.' };
-    if (plazoTipo === 'contado') return { img: 'haciendo_lluvia_dinero.png', msg: es ? '¡Decidido! El mejor precio es para ti.' : 'Decided! The best price is yours.' };
-    if (porcentajeEnganche === 0.01) return { img: 'contando_pesos.png', msg: es ? '¡Solo 1%! Así se empieza un sueño.' : 'Just 1%! That\'s how a dream begins.' };
-    if (porcentajeEnganche === 0.05) return { img: 'pensando_futuro.png', msg: es ? '5% de enganche, ¡buen balance!' : '5% down payment, great balance!' };
-    if (metros > 200) return { img: 'sorprendido.png', msg: es ? '¡Wow! Por ese tamaño tienes 48 meses sin intereses.' : 'Wow! For that size you get 48 months interest-free.' };
-    if (tipoSueño === 'Casa') return { img: 'echando_porras.png', msg: es ? '¡Alistemos maletas, nos mudamos!' : 'Pack your bags, we\'re moving!' };
-    if (tipoSueño === 'Negocio') return { img: 'jefe.png', msg: es ? '¡Un empresario visionario! Gran jugada.' : 'A visionary entrepreneur! Great move.' };
-    if (tipoSueño === 'Lote habitacional') return { img: 'presentandose.png', msg: es ? 'Todo empezó con un lotesito.' : 'It all started with a little lot.' };
+    // Guía paso a paso según lo que falta
+    if (!tipoSueño && !ultimaAccion) return { img: 'saludando.png', msg: es ? '¡Hola! Elige tu tipo de sueño.' : 'Hi! Choose your dream type.' };
+
+    // Reaccionar a la ÚLTIMA acción del usuario
+    if (ultimaAccion === 'tipoSueño') {
+      if (tipoSueño === 'Casa') return { img: 'echando_porras.png', msg: es ? '¡Alistemos maletas, nos mudamos!' : 'Pack your bags, we\'re moving!' };
+      if (tipoSueño === 'Negocio') return { img: 'jefe.png', msg: es ? '¡Un empresario visionario! Gran jugada.' : 'A visionary entrepreneur! Great move.' };
+      return { img: 'presentandose.png', msg: es ? 'Todo empezó con un lotesito.' : 'It all started with a little lot.' };
+    }
+    if (ultimaAccion === 'ubicacion') return { img: 'buscando_mapa.png', msg: es ? '¡Buena zona! Ahora personaliza tu sueño.' : 'Great area! Now customize your dream.' };
+    if (ultimaAccion === 'metros') {
+      if (metros > 200) return { img: 'sorprendido.png', msg: es ? '¡Wow! Estás pensando en grande.' : 'Wow! You\'re thinking big.' };
+      return { img: 'pensando.png', msg: es ? 'Buen tamaño para comenzar.' : 'Good size to start.' };
+    }
+    if (ultimaAccion === 'plazo') {
+      if (plazoTipo === '30_años') return { img: 'pensando_futuro.png', msg: es ? 'Plazo ideal. Olvídate del crédito bancario.' : 'Ideal term. Forget about bank credit.' };
+      if (plazoTipo === '20_años') return { img: 'guino_ojo.png', msg: es ? '¡Buena elección! No revisaremos tu Buró.' : 'Great choice! We won\'t check your credit score.' };
+      return { img: 'haciendo_lluvia_dinero.png', msg: es ? '¡Decidido! El mejor precio es para ti.' : 'Decided! The best price is yours.' };
+    }
+    if (ultimaAccion === 'enganche') {
+      if (porcentajeEnganche === 0.01) return { img: 'contando_pesos.png', msg: es ? '¡Solo 1%! Así se empieza un sueño.' : 'Just 1%! That\'s how a dream begins.' };
+      if (porcentajeEnganche === 0.05) return { img: 'pensando_futuro.png', msg: es ? '5% de enganche, ¡buen balance!' : '5% down payment, great balance!' };
+      return { img: 'feliz.png', msg: es ? '10% de enganche, ¡vas en serio!' : '10% down, you\'re serious!' };
+    }
+    if (ultimaAccion === 'moneda') return { img: 'contando_pesos.png', msg: es ? (moneda === 'USD' ? '¡En dólares! Inversionista internacional.' : 'De vuelta a pesos mexicanos.') : (moneda === 'USD' ? 'In dollars! International investor.' : 'Back to Mexican pesos.') };
+
     return { img: 'senalando_boton.png', msg: es ? 'Todo listo. ¡Genera tu folio!' : 'All set. Generate your folio!' };
   };
 
@@ -187,7 +200,7 @@ export default function HomePage({ params }: PageProps) {
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
 
               {/* PANEL DE RESULTADOS - FILAS COMPACTAS */}
-<div className={`space-y-1.5 transition-all duration-500 ${ubicacion ? 'opacity-100' : 'opacity-70 pointer-events-none'}`}>
+<div className={`space-y-1.5 transition-all duration-500 ${ubicacion ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
   
   {/* Fila 1: Total */}
   <div className="bg-neutral-900 border border-neutral-800 p-2 rounded-xl flex justify-between items-center px-4">
@@ -211,18 +224,18 @@ export default function HomePage({ params }: PageProps) {
   <div className="bg-neutral-900 border-l-4 border-red-600 p-2.5 rounded-xl flex justify-between items-center px-4 shadow-xl">
     <div>
       <span className="text-[8px] font-black text-red-500 uppercase block">
-        {plazoTipo === 'contado' ? t('contado') : t('mensualidad')}
+        {plazoTipo === 'contado' ? t('contado') : plazoTipo ? t('mensualidad') : '---'}
       </span>
       <div className="flex items-baseline gap-1">
         <span className="text-lg font-black text-white tracking-tighter">
-          ${mensualidadFinal.toLocaleString('en-US', {maximumFractionDigits:0})}
+          {plazoTipo && porcentajeEnganche > 0 ? `$${mensualidadFinal.toLocaleString('en-US', {maximumFractionDigits:0})}` : '$---'}
         </span>
         <span className="text-[8px] font-bold text-neutral-500 uppercase">{moneda}</span>
       </div>
     </div>
     <div className="text-right">
       <span className="bg-red-600/10 text-red-500 text-[8px] font-black px-1.5 py-0.5 rounded border border-red-600/20 uppercase">
-        {plazoTipo === 'contado' ? t('contado') : `${mesesFinal} ${t('meses')}`}
+        {plazoTipo ? (plazoTipo === 'contado' ? t('contado') : `${mesesFinal} ${t('meses')}`) : '---'}
       </span>
     </div>
   </div>
@@ -230,10 +243,10 @@ export default function HomePage({ params }: PageProps) {
   {/* SWITCH MONEDA */}
   <div className="flex items-center justify-center gap-1.5 mt-2">
     <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Tipo de cambio</span>
-    <button onClick={() => setMoneda('MXN')} className={`px-2 py-1 rounded-lg text-[11px] font-bold border transition-all ${moneda === 'MXN' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>
+    <button onClick={() => { setMoneda('MXN'); setUltimaAccion('moneda'); }} className={`px-2 py-1 rounded-lg text-[11px] font-bold border transition-all ${moneda === 'MXN' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>
       🇲🇽 MXN
     </button>
-    <button onClick={() => setMoneda('USD')} className={`px-2 py-1 rounded-lg text-[11px] font-bold border transition-all ${moneda === 'USD' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>
+    <button onClick={() => { setMoneda('USD'); setUltimaAccion('moneda'); }} className={`px-2 py-1 rounded-lg text-[11px] font-bold border transition-all ${moneda === 'USD' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>
       🇺🇸 USD
     </button>
   </div>
@@ -250,17 +263,17 @@ export default function HomePage({ params }: PageProps) {
                   <label className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{t('sueño')}</label>
                   <div className="grid grid-cols-2 gap-1.5">
                     {['Casa', 'Lote habitacional'].map((s) => (
-                      <button key={s} onClick={() => setTipoSueño(s)} className={`py-2 rounded-xl text-xs font-bold border transition-all ${tipoSueño === s ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>{s}</button>
+                      <button key={s} onClick={() => { setTipoSueño(s); setUltimaAccion('tipoSueño'); }} className={`py-2 rounded-xl text-xs font-bold border transition-all ${tipoSueño === s ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>{s}</button>
                     ))}
                   </div>
                   <div className="flex justify-center">
-                    <button onClick={() => setTipoSueño('Negocio')} className={`px-8 py-2 rounded-xl text-xs font-bold border transition-all ${tipoSueño === 'Negocio' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>Negocio</button>
+                    <button onClick={() => { setTipoSueño('Negocio'); setUltimaAccion('tipoSueño'); }} className={`px-8 py-2 rounded-xl text-xs font-bold border transition-all ${tipoSueño === 'Negocio' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>Negocio</button>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{t('ubicacion')}</label>
-                  <select value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} className="w-full bg-neutral-800 border border-neutral-700 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-white">
+                  <select value={ubicacion} onChange={(e) => { setUbicacion(e.target.value); setUltimaAccion('ubicacion'); }} className="w-full bg-neutral-800 border border-neutral-700 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-white">
                     <option value="">{t('seleccionaDesarrollo')}</option>
                     <option value="Costa Diamante">Costa Diamante (Cancún)</option>
                     <option value="Selva Mágica">Selva Mágica (Tulum)</option>
@@ -272,7 +285,7 @@ export default function HomePage({ params }: PageProps) {
                     <span>{t('metros')}</span>
                     <span className="text-white text-sm font-mono">{metros} m²</span>
                   </div>
-                  <input type="range" min="140" max="500" step="10" value={metros} onChange={(e) => setMetros(Number(e.target.value))} className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                  <input type="range" min="140" max="500" step="10" value={metros} onChange={(e) => { setMetros(Number(e.target.value)); setUltimaAccion('metros'); }} className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-blue-500" />
                 </div>
 
                 <div className="space-y-1.5">
@@ -285,7 +298,7 @@ export default function HomePage({ params }: PageProps) {
                     ].map((p) => (
                       <button
                         key={p.id}
-                        onClick={() => setPlazoTipo(p.id)}
+                        onClick={() => { setPlazoTipo(p.id); setUltimaAccion('plazo'); }}
                         className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                           plazoTipo === p.id 
                           ? 'bg-white text-black border-white' 
@@ -302,7 +315,7 @@ export default function HomePage({ params }: PageProps) {
                   <label className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{t('enganche')}</label>
                   <div className="grid grid-cols-3 gap-1.5">
                     {[0.01, 0.05, 0.10].map((pct) => (
-                      <button key={pct} onClick={() => setPorcentajeEnganche(pct)} className={`py-2 rounded-xl text-xs font-bold border transition-all ${porcentajeEnganche === pct ? 'bg-blue-600 border-blue-400 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-500'}`}>
+                      <button key={pct} onClick={() => { setPorcentajeEnganche(pct); setUltimaAccion('enganche'); }} className={`py-2 rounded-xl text-xs font-bold border transition-all ${porcentajeEnganche === pct ? 'bg-blue-600 border-blue-400 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-500'}`}>
                         {pct * 100}%
                       </button>
                     ))}
@@ -310,7 +323,7 @@ export default function HomePage({ params }: PageProps) {
                 </div>
               </div>
 
-              <button disabled={!ubicacion} onClick={() => setPasoActual(1)} className="w-full bg-white text-black py-3 rounded-xl text-sm font-black uppercase tracking-tighter hover:bg-blue-500 hover:text-white transition-all disabled:opacity-20 active:scale-95 shadow-xl">{t('botonFolio')}</button>
+              <button disabled={!tipoSueño || !ubicacion || !plazoTipo || porcentajeEnganche === 0} onClick={() => setPasoActual(1)} className="w-full bg-white text-black py-3 rounded-xl text-sm font-black uppercase tracking-tighter hover:bg-blue-500 hover:text-white transition-all disabled:opacity-20 active:scale-95 shadow-xl">{t('botonFolio')}</button>
             </div>
           )}
 
@@ -453,7 +466,7 @@ export default function HomePage({ params }: PageProps) {
               {/* Botón de WhatsApp */}
               <button 
                 onClick={() => {
-                  const msg = `¡Hola Alfonso! Soy ${nombre}. Mi Folio es ${resultado.folio_texto}. Coticé un ${tipoSueño} en ${ubicacion} de ${metros}m2 con enganche del ${porcentajeEnganche*100}%.`;
+                  const msg = `¡Hola Alfonso! Soy ${nombre}. Mi Folio es ${resultado.folio_texto}. Coticé un ${tipoSueño} en ${ubicacion} de ${metros}m2 con enganche del ${porcentajeEnganche*100}% a ${plazoTipo === 'contado' ? 'contado' : plazoTipo === '20_años' ? '20 años' : '30 años'}.`;
                   window.open(`https://wa.me/${WHATSAPP_ALFONSO}?text=${encodeURIComponent(msg)}`, '_blank');
                 }}
                 className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white py-6 rounded-[2rem] text-xl font-black uppercase flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(37,211,102,0.3)] transition-all active:scale-95"
