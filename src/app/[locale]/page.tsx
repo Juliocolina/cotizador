@@ -417,21 +417,50 @@ export default function HomePage({ params }: PageProps) {
           {/* PASO 4: ÉXITO                              */}
           {/* ========================================== */}
           {pasoActual === 4 && resultado && (
-            <div className="text-center space-y-8 animate-in zoom-in duration-500">
-              <img src="/guardian/Celebrando.png" alt="Celebrando" className="w-24 h-24 object-contain mx-auto" />
-              <div className="space-y-2">
-                <h2 className="text-4xl font-black tracking-tighter italic">{t('paso4titulo')}</h2>
-                <div className="bg-neutral-950 py-8 rounded-[2.5rem] border border-blue-500/30">
-                  <span className="text-5xl font-mono font-bold text-blue-400 tracking-tighter">{resultado.folio_texto}</span>
+            <div className="text-center space-y-8 animate-in zoom-in duration-500 py-6">
+              {/* Imagen de Celebración */}
+              <img 
+                src="/guardian/Celebrando.png" 
+                alt="Celebrando" 
+                className="w-32 h-32 object-contain mx-auto drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]" 
+              />
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic leading-tight">
+                    {t('paso4titulo')}, {nombre}!
+                  </h2>
+                  <p className="text-neutral-400 font-medium italic">
+                    Tu sueño está un paso más cerca de convertirse en realidad.
+                  </p>
+                </div>
+
+                {/* Caja del Folio */}
+                <div className="bg-neutral-950/80 py-10 rounded-[3rem] border border-blue-500/30 shadow-2xl backdrop-blur-sm">
+                  <p className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em] mb-2">Tu Folio Oficial</p>
+                  <span className="text-6xl font-mono font-black text-white tracking-tighter drop-shadow-sm">
+                    {resultado.folio_texto}
+                  </span>
+                </div>
+
+                <div className="px-4 space-y-4">
+                  <p className="text-sm text-neutral-400 leading-relaxed">
+                    Agradecemos tu confianza en <span className="text-white font-bold">Mi Sueño Mexicano</span>. Revisa tu correo electrónico donde encontrarás más información detallada.
+                  </p>
                 </div>
               </div>
+
+              {/* Botón de WhatsApp */}
               <button 
                 onClick={() => {
                   const msg = `¡Hola Alfonso! Soy ${nombre}. Mi Folio es ${resultado.folio_texto}. Coticé un ${tipoSueño} en ${ubicacion} de ${metros}m2 con enganche del ${porcentajeEnganche*100}%.`;
                   window.open(`https://wa.me/${WHATSAPP_ALFONSO}?text=${encodeURIComponent(msg)}`, '_blank');
                 }}
-                className="w-full bg-[#25D366] text-white py-5 rounded-2xl text-lg font-black uppercase flex items-center justify-center gap-3 shadow-xl"
+                className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white py-6 rounded-[2rem] text-xl font-black uppercase flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(37,211,102,0.3)] transition-all active:scale-95"
               >
+                <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.3 1.592 5.548 0 10.061-4.512 10.063-10.058 0-2.69-1.044-5.217-2.941-7.115-1.897-1.897-4.425-2.943-7.117-2.943-5.556 0-10.069 4.513-10.07 10.059-.001 2.154.593 3.946 1.72 5.741l-1.016 3.71 3.818-1.001c-.163.084-.316.152-.316.152zm10.744-4.57c-.287-.144-1.7-.839-1.987-.944-.288-.105-.497-.158-.707.158-.21.315-.813 1.025-.996 1.235-.183.21-.366.236-.653.092-.287-.144-1.21-.447-2.305-1.424-.852-.759-1.427-1.7-1.594-1.987-.167-.287-.018-.442.126-.585.13-.129.287-.335.431-.503.144-.168.191-.287.287-.478.096-.191.048-.359-.024-.503-.072-.144-.707-1.706-.97-2.338-.255-.618-.517-.534-.707-.544-.183-.01-.393-.012-.603-.012s-.551.079-.839.393c-.288.315-1.101 1.077-1.101 2.623s1.127 3.046 1.284 3.255c.158.21 2.219 3.389 5.375 4.755.751.325 1.336.52 1.792.665.754.239 1.44.205 1.982.124.605-.09 1.701-.696 1.94-1.365.24-.668.24-1.24.168-1.365-.072-.126-.268-.21-.555-.354z" />
+                </svg>
                 {t('paso4whatsapp')}
               </button>
             </div>
