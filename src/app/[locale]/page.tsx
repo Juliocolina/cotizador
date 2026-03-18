@@ -21,11 +21,23 @@ export default function HomePage({ params }: PageProps) {
   const [porcentajeEnganche, setPorcentajeEnganche] = useState(0.10); // A5.9
 
   // --- 2. CÁLCULOS DINÁMICOS ---
+  const [plazoTipo, setPlazoTipo] = useState('30_años');
+
+  const obtenerMeses = () => {
+    if (plazoTipo === 'contado') return 1;
+    if (plazoTipo === '20_años') return 240;
+    if (plazoTipo === '30_años') return 360;
+    return 36;
+  };
+
+  const mesesFinal = obtenerMeses();
+
   const precioM2 = moneda === 'MXN' ? 1500 : 85;
   const total = metros * precioM2;
   const engancheEfectivo = total * porcentajeEnganche;
-  const plazoMSI = metros <= 200 ? 36 : 48;
-  const mensualidad = (total - engancheEfectivo) / plazoMSI;
+  const montoAFinanciar = total - engancheEfectivo;
+
+  const mensualidadFinal = mesesFinal > 0 ? montoAFinanciar / mesesFinal : montoAFinanciar;
 
   // --- 3. ESTADOS DEL FLUJO (PASOS) ---
   // 0 = Cotizador, 1 = Consentimiento, 2 = Datos, 3 = Email/Notas, 4 = Éxito
@@ -59,6 +71,9 @@ export default function HomePage({ params }: PageProps) {
 
     // Paso 0: Cotizador — prioridad de triggers
     if (!ubicacion) return { img: 'saludando.png', msg: es ? '¡Hola! Elige una ubicación para comenzar.' : 'Hi! Choose a location to get started.' };
+    if (plazoTipo === '30_años') return { img: 'pensando_futuro.png', msg: es ? 'Plazo ideal. Olvídate del crédito bancario.' : 'Ideal term. Forget about bank credit.' };
+    if (plazoTipo === '20_años') return { img: 'guino_ojo.png', msg: es ? '¡Buena elección! No revisaremos tu Buró.' : 'Great choice! We won\'t check your credit score.' };
+    if (plazoTipo === 'contado') return { img: 'haciendo_lluvia_dinero.png', msg: es ? '¡Decidido! El mejor precio es para ti.' : 'Decided! The best price is yours.' };
     if (porcentajeEnganche === 0.01) return { img: 'contando_pesos.png', msg: es ? '¡Solo 1%! Así se empieza un sueño.' : 'Just 1%! That\'s how a dream begins.' };
     if (porcentajeEnganche === 0.05) return { img: 'pensando_futuro.png', msg: es ? '5% de enganche, ¡buen balance!' : '5% down payment, great balance!' };
     if (metros > 200) return { img: 'sorprendido.png', msg: es ? '¡Wow! Por ese tamaño tienes 48 meses sin intereses.' : 'Wow! For that size you get 48 months interest-free.' };
@@ -79,7 +94,8 @@ export default function HomePage({ params }: PageProps) {
           telefono_cliente: telefono,
           email_cliente: email,
           idioma: locale,
-          notas: `Sueño: ${tipoSueño} | Ubicación: ${ubicacion} | Metros: ${metros} | Enganche: ${porcentajeEnganche * 100}% | Notas: ${notas}`
+          notas: `Sueño: ${tipoSueño} | Ubicación: ${ubicacion} | Metros: ${metros} | Enganche: ${porcentajeEnganche * 100}% | Notas: ${notas}`,
+          ip_cliente: await fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => d.ip).catch(() => 'N/A')
       }])
       .select('folio_texto')
       .single();
@@ -97,15 +113,15 @@ export default function HomePage({ params }: PageProps) {
       <div className="w-full max-w-md bg-neutral-900 rounded-[2.5rem] border border-neutral-800 shadow-2xl overflow-hidden relative transition-all duration-500">
         
         {/* HEADER */}
-        <div className="p-4 border-b border-neutral-800 flex justify-between items-center bg-neutral-900/50">
-          <div className="flex items-center gap-3">
-            <img src="/logo-fondo-blanco.png" alt="Mi Sueño Mexicano" className="w-10 h-10 rounded-full object-contain cursor-pointer" onClick={() => { setPasoActual(0); setUbicacion(''); setNombre(''); setTelefono(''); setEmail(''); setNotas(''); setResultado(null); }} />
-            <div>
-              <h1 className="text-sm font-black text-white leading-none">Mi Sueño Mexicano</h1>
-              <p className="text-[9px] text-neutral-500 italic">Tu terreno, tu futuro</p>
+        <div className="px-2 py-2 border-b border-neutral-800 flex justify-between items-center bg-neutral-900/50">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <img src="/logo-fondo-blanco.png" alt="Mi Sueño Mexicano" className="w-10 h-10 rounded-full object-contain cursor-pointer flex-shrink-0" onClick={() => { setPasoActual(0); setUbicacion(''); setNombre(''); setTelefono(''); setEmail(''); setNotas(''); setResultado(null); }} />
+            <div className="min-w-0">
+              <h1 className="text-sm font-black text-white leading-tight">Mi Sueño Mexicano</h1>
+              <p className="text-[10px] text-blue-300 italic">Tu trabajo merece raices</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 flex-shrink-0">
             <div className="relative">
               <button onClick={() => setIdiomaAbierto(!idiomaAbierto)} className="text-[10px] font-bold px-2 py-1 rounded-md bg-neutral-800 border border-neutral-700 hover:border-blue-500 transition-all flex items-center gap-1">
                 {locale.toUpperCase()} <span className="text-[8px]">{idiomaAbierto ? '▲' : '▼'}</span>
@@ -117,108 +133,184 @@ export default function HomePage({ params }: PageProps) {
                 </div>
               )}
             </div>
-            <button onClick={() => setMenuAbierto(!menuAbierto)} className="p-2 hover:bg-neutral-800 rounded-lg transition-all">
+            <button onClick={() => setMenuAbierto(!menuAbierto)} className="p-1.5 hover:bg-neutral-800 rounded-lg transition-all">
               <div className="space-y-1">
-                <div className="w-5 h-0.5 bg-white" />
-                <div className="w-5 h-0.5 bg-white" />
-                <div className="w-5 h-0.5 bg-white" />
+                <div className="w-4 h-0.5 bg-white" />
+                <div className="w-4 h-0.5 bg-white" />
+                <div className="w-4 h-0.5 bg-white" />
               </div>
             </button>
           </div>
         </div>
 
-        {/* DRAWER MENU */}
-        {menuAbierto && (
-          <div className="bg-neutral-900 border-b border-neutral-800 p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
-            <a href="#" className="block text-sm text-neutral-400 hover:text-white transition-all">{t('menu.servicio')}</a>
-            <a href="#" className="block text-sm text-neutral-400 hover:text-white transition-all">{t('menu.hogar')}</a>
-            <a href="#" className="block text-sm text-neutral-400 hover:text-white transition-all">{t('menu.cotizacion')}</a>
-            <a href="#" className="block text-sm text-neutral-400 hover:text-white transition-all">{t('menu.contacto')}</a>
+        {/* DRAWER MENU LATERAL IZQUIERDO */}
+        <div className={`fixed inset-0 z-50 transition-all duration-300 ${menuAbierto ? 'visible' : 'invisible'}`}>
+          <div className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${menuAbierto ? 'opacity-100' : 'opacity-0'}`} onClick={() => setMenuAbierto(false)} />
+          <div className={`absolute top-0 left-0 h-full w-64 bg-neutral-900 border-r border-neutral-800 p-6 space-y-4 transition-transform duration-300 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
+            <button onClick={() => setMenuAbierto(false)} className="text-neutral-500 hover:text-white text-2xl font-bold mb-4">✕</button>
+            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.servicio')}</a>
+            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.hogar')}</a>
+            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.cotizacion')}</a>
+            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.contacto')}</a>
+            <div className="h-px bg-neutral-800" />
+            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.quienes')}</a>
+            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.ciudadMadera')}</a>
+            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.razones')}</a>
+            <div className="h-px bg-neutral-800" />
+            <div className="flex gap-4">
+              <a href="https://tiktok.com/@misuenomexicano" target="_blank" className="text-neutral-400 hover:text-white transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.7a8.18 8.18 0 0 0 4.76 1.52v-3.4a4.85 4.85 0 0 1-1-.13z"/></svg>
+              </a>
+              <a href="https://youtube.com/@misuenomexicano" target="_blank" className="text-neutral-400 hover:text-white transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg>
+              </a>
+            </div>
           </div>
-        )}
+        </div>
 
         {/* EL GUARDIÁN DEL SUEÑO (A3) */}
         {pasoActual < 4 && (
-          <div className="px-8 pt-6">
-            <div className="bg-blue-600/10 border border-blue-600/20 p-4 rounded-2xl flex gap-3 items-center">
-              <img src={`/guardian/${guardian.img}`} alt="Guardián" className="w-14 h-14 object-contain flex-shrink-0" />
-              <p className="text-[11px] text-blue-300 font-bold leading-tight">{guardian.msg}</p>
+          <div className="px-5 pt-4">
+            <div className="bg-blue-600/10 border border-blue-600/20 p-2.5 rounded-xl flex gap-2 items-center">
+              <img src={`/guardian/${guardian.img}`} alt="Guardián" className="w-12 h-12 object-contain flex-shrink-0" />
+              <p className="text-xs text-blue-300 font-bold leading-tight">{guardian.msg}</p>
             </div>
           </div>
         )}
 
-        <div className="p-8">
+        <div className="p-5">
           
           {/* ========================================== */}
           {/* PASO 0: COTIZADOR COMPLETO                  */}
           {/* ========================================== */}
           {pasoActual === 0 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-              
-              <div className="text-center mb-6">
-                <h1 className="text-2xl font-bold">{t('title')}</h1>
-              </div>
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
 
-              <div className="space-y-2">
-                <label className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{t('sueño')}</label>
-                <div className="flex gap-2">
-                  {['Casa', 'Lote habitacional', 'Negocio'].map((s) => (
-                    <button key={s} onClick={() => setTipoSueño(s)} className={`flex-1 py-3 rounded-2xl text-[10px] font-bold border transition-all ${tipoSueño === s ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>{s}</button>
-                  ))}
-                </div>
-              </div>
+              {/* PANEL DE RESULTADOS - FILAS COMPACTAS */}
+<div className={`space-y-1.5 transition-all duration-500 ${ubicacion ? 'opacity-100' : 'opacity-70 pointer-events-none'}`}>
+  
+  {/* Fila 1: Total */}
+  <div className="bg-neutral-900 border border-neutral-800 p-2 rounded-xl flex justify-between items-center px-4">
+    <span className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">{t('total')}</span>
+    <span className="text-xs font-mono font-bold text-white">${total.toLocaleString()}</span>
+  </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{t('ubicacion')}</label>
-                <select value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} className="w-full bg-neutral-800 border border-neutral-700 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-white">
-                  <option value="">{t('seleccionaDesarrollo')}</option>
-                  <option value="Costa Diamante">Costa Diamante (Cancún)</option>
-                  <option value="Selva Mágica">Selva Mágica (Tulum)</option>
-                </select>
-              </div>
+  {/* Fila 2: Enganche */}
+  <div className="bg-neutral-900 border border-neutral-800 p-2 rounded-xl flex justify-between items-center px-4">
+    <span className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">{t('enganche')}</span>
+    <span className="text-xs font-mono font-bold text-green-400">${engancheEfectivo.toLocaleString()}</span>
+  </div>
 
-              <div className="space-y-3">
-                <div className="flex justify-between text-[10px] font-black text-neutral-500 uppercase tracking-widest">
-                  <span>{t('metros')}</span>
-                  <span className="text-white text-base font-mono">{metros} m²</span>
-                </div>
-                <input type="range" min="140" max="500" step="10" value={metros} onChange={(e) => setMetros(Number(e.target.value))} className="w-full h-2 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-blue-500" />
-              </div>
+  {/* Fila 3: Monto a Financiar */}
+  <div className="bg-neutral-900 border border-neutral-800 p-2 rounded-xl flex justify-between items-center px-4">
+    <span className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">{t('montoFinanciar')}</span>
+    <span className="text-xs font-mono font-bold text-blue-400">${montoAFinanciar.toLocaleString()}</span>
+  </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{t('enganche')}</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[0.01, 0.05, 0.10].map((pct) => (
-                    <button key={pct} onClick={() => setPorcentajeEnganche(pct)} className={`py-3 rounded-2xl text-xs font-bold border transition-all ${porcentajeEnganche === pct ? 'bg-blue-600 border-blue-400 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-500'}`}>
-                      {pct * 100}%
-                    </button>
-                  ))}
-                </div>
-              </div>
+  {/* Fila 4: Mensualidad */}
+  <div className="bg-neutral-900 border-l-4 border-red-600 p-2.5 rounded-xl flex justify-between items-center px-4 shadow-xl">
+    <div>
+      <span className="text-[8px] font-black text-red-500 uppercase block">
+        {plazoTipo === 'contado' ? t('contado') : t('mensualidad')}
+      </span>
+      <div className="flex items-baseline gap-1">
+        <span className="text-lg font-black text-white tracking-tighter">
+          ${mensualidadFinal.toLocaleString('en-US', {maximumFractionDigits:0})}
+        </span>
+        <span className="text-[8px] font-bold text-neutral-500 uppercase">{moneda}</span>
+      </div>
+    </div>
+    <div className="text-right">
+      <span className="bg-red-600/10 text-red-500 text-[8px] font-black px-1.5 py-0.5 rounded border border-red-600/20 uppercase">
+        {plazoTipo === 'contado' ? t('contado') : `${mesesFinal} ${t('meses')}`}
+      </span>
+    </div>
+  </div>
 
-              {/* PANEL RESULTADOS */}
-              <div className="rounded-[2rem] p-6 border bg-neutral-950 border-blue-500/30 shadow-2xl scale-105 transition-all duration-700">
-                <div className="space-y-4 animate-in zoom-in-95 duration-500">
-                  <div className="flex justify-between items-end">
-                    <span className="text-neutral-500 text-[10px] font-bold uppercase tracking-tighter">{t('mensualidad')} ({plazoMSI} {t('meses')})</span>
-                    <span className="text-3xl font-mono font-bold text-green-400">${mensualidad.toLocaleString('en-US', {maximumFractionDigits:0})}</span>
+  {/* SWITCH MONEDA */}
+  <div className="flex items-center justify-center gap-1.5 mt-2">
+    <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Tipo de cambio</span>
+    <button onClick={() => setMoneda('MXN')} className={`px-2 py-1 rounded-lg text-[11px] font-bold border transition-all ${moneda === 'MXN' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>
+      🇲🇽 MXN
+    </button>
+    <button onClick={() => setMoneda('USD')} className={`px-2 py-1 rounded-lg text-[11px] font-bold border transition-all ${moneda === 'USD' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>
+      🇺🇸 USD
+    </button>
+  </div>
+</div>
+
+              {/* MESA DE DISEÑO */}
+              <div className="space-y-4 mt-4 max-h-[40vh] overflow-y-auto scrollbar-thin pr-1
+                [&::-webkit-scrollbar]:w-1 
+                [&::-webkit-scrollbar-track]:bg-transparent 
+                [&::-webkit-scrollbar-thumb]:bg-neutral-700 
+                [&::-webkit-scrollbar-thumb]:rounded-full
+                [&::-webkit-scrollbar-thumb]:hover:bg-blue-500">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{t('sueño')}</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {['Casa', 'Lote habitacional'].map((s) => (
+                      <button key={s} onClick={() => setTipoSueño(s)} className={`py-2 rounded-xl text-xs font-bold border transition-all ${tipoSueño === s ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>{s}</button>
+                    ))}
                   </div>
-                  <div className="h-px bg-neutral-800 w-full" />
-                  <div className="flex justify-between text-[10px] text-neutral-500 font-mono italic">
-                    <span>{t('enganche')}: ${engancheEfectivo.toLocaleString()}</span>
-                    <span>{t('total')}: ${total.toLocaleString()}</span>
+                  <div className="flex justify-center">
+                    <button onClick={() => setTipoSueño('Negocio')} className={`px-8 py-2 rounded-xl text-xs font-bold border transition-all ${tipoSueño === 'Negocio' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-500 border-neutral-700'}`}>Negocio</button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{t('ubicacion')}</label>
+                  <select value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} className="w-full bg-neutral-800 border border-neutral-700 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-white">
+                    <option value="">{t('seleccionaDesarrollo')}</option>
+                    <option value="Costa Diamante">Costa Diamante (Cancún)</option>
+                    <option value="Selva Mágica">Selva Mágica (Tulum)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-[10px] font-black text-neutral-500 uppercase tracking-widest">
+                    <span>{t('metros')}</span>
+                    <span className="text-white text-sm font-mono">{metros} m²</span>
+                  </div>
+                  <input type="range" min="140" max="500" step="10" value={metros} onChange={(e) => setMetros(Number(e.target.value))} className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{t('plazo')}</label>
+                  <div className="flex gap-1.5">
+                    {[
+                      { id: 'contado', label: t('contado') },
+                      { id: '20_años', label: '20 años' },
+                      { id: '30_años', label: '30 años' }
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => setPlazoTipo(p.id)}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                          plazoTipo === p.id 
+                          ? 'bg-white text-black border-white' 
+                          : 'bg-neutral-800 text-neutral-500 border-neutral-700'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{t('enganche')}</label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[0.01, 0.05, 0.10].map((pct) => (
+                      <button key={pct} onClick={() => setPorcentajeEnganche(pct)} className={`py-2 rounded-xl text-xs font-bold border transition-all ${porcentajeEnganche === pct ? 'bg-blue-600 border-blue-400 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-500'}`}>
+                        {pct * 100}%
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              {/* SWITCH MONEDA */}
-              <div className="flex justify-center">
-                <button onClick={() => setMoneda(moneda === 'MXN' ? 'USD' : 'MXN')} className="text-[10px] font-black bg-neutral-800 px-4 py-2 rounded-full border border-neutral-700 hover:border-blue-500 transition-all">
-                  {moneda === 'MXN' ? '🇲🇽 MXN → USD' : '🇺🇸 USD → MXN'}
-                </button>
-              </div>
-
-              <button disabled={!ubicacion} onClick={() => setPasoActual(1)} className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-tighter hover:bg-blue-500 hover:text-white transition-all disabled:opacity-20 active:scale-95 shadow-xl">{t('botonFolio')}</button>
+              <button disabled={!ubicacion} onClick={() => setPasoActual(1)} className="w-full bg-white text-black py-3 rounded-xl text-sm font-black uppercase tracking-tighter hover:bg-blue-500 hover:text-white transition-all disabled:opacity-20 active:scale-95 shadow-xl">{t('botonFolio')}</button>
             </div>
           )}
 
@@ -235,34 +327,87 @@ export default function HomePage({ params }: PageProps) {
 
               {pasoActual === 1 && (
                 <div className="text-center space-y-6">
-                  <h2 className="text-2xl font-bold">¿Aseguramos este precio?</h2>
-                  <p className="text-neutral-400 text-sm">Al generar tu folio, bloqueamos la mensualidad de <b>${mensualidad.toLocaleString()}</b> por 48 horas.</p>
-                  <button onClick={() => setPasoActual(2)} className="w-full bg-blue-600 py-5 rounded-2xl font-black uppercase">Sí, obtener folio</button>
-                  <button onClick={() => setPasoActual(0)} className="text-neutral-500 text-xs font-bold uppercase tracking-widest">Regresar al cotizador</button>
+                  <h2 className="text-3xl font-bold">{t('paso1titulo')}</h2>
+                  <p className="text-neutral-400 text-base">{t('paso1texto')}</p>
+                  <button onClick={() => setPasoActual(2)} className="w-full bg-blue-600 py-5 rounded-2xl text-lg font-black uppercase">{t('paso1si')}</button>
+                  <button onClick={() => setPasoActual(0)} className="text-neutral-500 text-base font-bold uppercase tracking-widest">{t('paso1no')}</button>
                 </div>
               )}
 
-              {pasoActual === 2 && (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold">Tus datos básicos</h2>
-                  <input required placeholder="Nombre Completo" className="w-full bg-neutral-800 border border-neutral-700 rounded-2xl p-5 text-white" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-                  <input required placeholder="WhatsApp" className="w-full bg-neutral-800 border border-neutral-700 rounded-2xl p-5 text-white" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
-                  <div className="flex items-center justify-between p-2">
-                    <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">¿Es tu WhatsApp principal?</span>
-                    <button onClick={() => setEsMismoWhatsApp(!esMismoWhatsApp)} className={`w-10 h-5 rounded-full relative ${esMismoWhatsApp ? 'bg-green-500' : 'bg-neutral-700'}`}>
-                      <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${esMismoWhatsApp ? 'left-6' : 'left-1'}`} />
-                    </button>
-                  </div>
-                  <button disabled={!nombre || !telefono} onClick={() => setPasoActual(3)} className="w-full bg-blue-600 py-5 rounded-2xl font-black uppercase">Siguiente</button>
-                </div>
-              )}
+              {/* PASO 2: FORMULARIO DE CONTACTO */}
+{pasoActual === 2 && (
+  <div className="space-y-6 animate-in fade-in duration-300">
+    {/* Título eliminado como pediste */}
+    
+    <div className="space-y-4">
+      {/* 1. Input de Nombre */}
+      <input 
+        required 
+        placeholder={t('form.name')} 
+        className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-5 text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
+        value={nombre} 
+        onChange={(e) => setNombre(e.target.value)} 
+      />
+
+      {/* 2. Input de Celular Principal */}
+      <input 
+        required 
+        placeholder="Número de Celular" 
+        className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-5 text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
+        value={telefono} 
+        onChange={(e) => setTelefono(e.target.value)} 
+      />
+
+      {/* 3. Input de WhatsApp (Aparece por defecto) */}
+      {/* Se oculta solo cuando esMismoWhatsApp es TRUE */}
+      {!esMismoWhatsApp && (
+        <div className="animate-in slide-in-from-top-2 duration-200">
+          <input 
+            placeholder="Número de WhatsApp" 
+            className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-5 text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
+            // Aquí puedes usar un estado nuevo si quieres guardar el WhatsApp por separado
+            onChange={(e) => console.log(e.target.value)} 
+          />
+        </div>
+      )}
+
+      {/* Switch: Al presionar la barrita, desaparece el input de arriba */}
+      <div className="flex items-center justify-between px-2 py-1">
+        <span className="text-[10px] text-neutral-500 font-black uppercase tracking-widest italic">
+          ¿Usar el mismo para WhatsApp?
+        </span>
+        <button 
+          onClick={() => setEsMismoWhatsApp(!esMismoWhatsApp)} 
+          className={`w-10 h-5 rounded-full relative transition-colors ${esMismoWhatsApp ? 'bg-green-500' : 'bg-neutral-800'}`}
+        >
+          <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${esMismoWhatsApp ? 'left-6' : 'left-1'}`} />
+        </button>
+      </div>
+
+      <button 
+        disabled={!nombre || !telefono} 
+        onClick={() => setPasoActual(3)} 
+        className="w-full bg-blue-600 py-5 rounded-2xl text-lg font-black uppercase tracking-widest shadow-xl disabled:opacity-20 active:scale-95 transition-all"
+      >
+        {t('paso2siguiente')}
+      </button>
+      
+      <button 
+        onClick={() => setPasoActual(1)} 
+        className="block w-full text-center text-[10px] font-black text-neutral-500 uppercase tracking-widest pt-2"
+      >
+        Atrás
+      </button>
+    </div>
+  </div>
+)}
 
               {pasoActual === 3 && (
                 <div className="space-y-4">
-                  <h2 className="text-xl font-bold">Último paso</h2>
-                  <input required type="email" placeholder="Correo electrónico" className="w-full bg-neutral-800 border border-neutral-700 rounded-2xl p-5 text-white" value={email} onChange={(e) => setEmail(e.target.value)} />
-                  <textarea placeholder="Notas adicionales..." className="w-full bg-neutral-800 border border-neutral-700 rounded-2xl p-5 text-white h-24" value={notas} onChange={(e) => setNotas(e.target.value)} />
-                  <button disabled={loading || !email} onClick={enviarCotizacion} className="w-full bg-green-600 py-5 rounded-2xl font-black uppercase">{loading ? 'Procesando...' : 'Finalizar y Ver Folio'}</button>
+                  <h2 className="text-2xl font-bold">{t('paso3titulo')}</h2>
+                  <input required type="email" placeholder={t('form.email')} className="w-full bg-neutral-800 border border-neutral-700 rounded-2xl p-5 text-base text-white" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <textarea placeholder={t('paso3notas')} className="w-full bg-neutral-800 border border-neutral-700 rounded-2xl p-5 text-base text-white h-28" value={notas} onChange={(e) => setNotas(e.target.value)} />
+                  <button disabled={loading || !email} onClick={enviarCotizacion} className="w-full bg-green-600 py-5 rounded-2xl text-lg font-black uppercase">{loading ? t('paso3procesando') : t('paso3enviar')}</button>
                 </div>
               )}
             </div>
@@ -275,7 +420,7 @@ export default function HomePage({ params }: PageProps) {
             <div className="text-center space-y-8 animate-in zoom-in duration-500">
               <img src="/guardian/Celebrando.png" alt="Celebrando" className="w-24 h-24 object-contain mx-auto" />
               <div className="space-y-2">
-                <h2 className="text-3xl font-black tracking-tighter italic">¡FOLIO LISTO!</h2>
+                <h2 className="text-4xl font-black tracking-tighter italic">{t('paso4titulo')}</h2>
                 <div className="bg-neutral-950 py-8 rounded-[2.5rem] border border-blue-500/30">
                   <span className="text-5xl font-mono font-bold text-blue-400 tracking-tighter">{resultado.folio_texto}</span>
                 </div>
@@ -285,9 +430,9 @@ export default function HomePage({ params }: PageProps) {
                   const msg = `¡Hola Alfonso! Soy ${nombre}. Mi Folio es ${resultado.folio_texto}. Coticé un ${tipoSueño} en ${ubicacion} de ${metros}m2 con enganche del ${porcentajeEnganche*100}%.`;
                   window.open(`https://wa.me/${WHATSAPP_ALFONSO}?text=${encodeURIComponent(msg)}`, '_blank');
                 }}
-                className="w-full bg-[#25D366] text-white py-5 rounded-2xl font-black uppercase flex items-center justify-center gap-3 shadow-xl"
+                className="w-full bg-[#25D366] text-white py-5 rounded-2xl text-lg font-black uppercase flex items-center justify-center gap-3 shadow-xl"
               >
-                Enviar folio al asesor
+                {t('paso4whatsapp')}
               </button>
             </div>
           )}
