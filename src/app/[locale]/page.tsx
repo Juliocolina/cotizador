@@ -1,9 +1,17 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useTranslations } from 'next-intl';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+
+interface Proyecto {
+  id: string;
+  nombre_desarrollo: string;
+  ciudad: string;
+  precio_m2_base: number;
+  precio_m2_usd: number;
+}
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -13,6 +21,14 @@ export default function HomePage({ params }: PageProps) {
   const { locale } = use(params);
   const t = useTranslations('HomePage');
 
+  // --- 0. DATOS DINÁMICOS DE SUPABASE ---
+  const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+
+  useEffect(() => {
+    supabase.from('configuracion_proyectos').select('*').eq('activo', true).order('nombre_desarrollo')
+      .then(({ data }) => { if (data) setProyectos(data); });
+  }, []);
+
   // --- 1. ESTADOS DE LA MESA DE DISEÑO (JUEGO) ---
   const [tipoSueño, setTipoSueño] = useState(''); // A5.1
   const [ubicacion, setUbicacion] = useState(''); // A5.2
@@ -20,6 +36,8 @@ export default function HomePage({ params }: PageProps) {
   const [metros, setMetros] = useState(140); // A5.10
   const [porcentajeEnganche, setPorcentajeEnganche] = useState(0); // A5.9
   const [ultimaAccion, setUltimaAccion] = useState('');
+
+  const proyectoActual = proyectos.find(p => p.nombre_desarrollo === ubicacion);
 
   // --- 2. CÁLCULOS DINÁMICOS ---
   const [plazoTipo, setPlazoTipo] = useState('');
@@ -33,7 +51,7 @@ export default function HomePage({ params }: PageProps) {
 
   const mesesFinal = obtenerMeses();
 
-  const precioM2 = moneda === 'MXN' ? 1500 : 85;
+  const precioM2 = proyectoActual ? (moneda === 'MXN' ? proyectoActual.precio_m2_base : proyectoActual.precio_m2_usd) : (moneda === 'MXN' ? 1500 : 85);
   const total = metros * precioM2;
   const engancheEfectivo = total * porcentajeEnganche;
   const montoAFinanciar = total - engancheEfectivo;
@@ -100,25 +118,53 @@ export default function HomePage({ params }: PageProps) {
 
   const enviarCotizacion = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('leads_cotizaciones')
-      .insert([{ 
-          nombre_cliente: nombre, 
-          telefono_cliente: telefono,
-          email_cliente: email,
-          idioma: locale,
-          notas: `Sueño: ${tipoSueño} | Ubicación: ${ubicacion} | Metros: ${metros} | Enganche: ${porcentajeEnganche * 100}% | Notas: ${notas}`,
-          ip_cliente: await fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => d.ip).catch(() => 'N/A')
-      }])
-      .select('folio_texto')
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('leads_cotizaciones')
+        .insert([{ 
+            nombre_cliente: nombre, 
+            telefono_cliente: telefono,
+            email_cliente: email,
+            idioma: locale,
+            notas: notas || null,
+            ip_cliente: await fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => d.ip).catch(() => 'N/A'),
+            tipo_sueno: tipoSueño,
+            ubicacion,
+            metros_cuadrados: metros,
+            porcentaje_enganche: porcentajeEnganche,
+            monto_total: total,
+            monto_enganche: engancheEfectivo,
+            monto_a_financiar: montoAFinanciar,
+            mensualidad_estimada: mensualidadFinal,
+            plazo_tipo: plazoTipo,
+            meses_totales: mesesFinal,
+            moneda,
+            whatsapp_principal: esMismoWhatsApp
+        }])
+        .select('folio_texto')
+        .single();
 
-    if (error) alert(error.message);
-    else {
+      if (error) throw error;
       setResultado(data);
-      setPasoActual(4); 
+      setPasoActual(4);
+
+      // Enviar email con resumen (no bloquea el flujo)
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre, email, folio: data.folio_texto, ubicacion,
+          tipoSueno: tipoSueño, metros, montoTotal: total,
+          mensualidad: mensualidadFinal, plazoTipo, meses: mesesFinal,
+          moneda, enganche: engancheEfectivo
+        })
+      }).catch(() => {});
+    } catch (error: any) {
+      console.error('Error al guardar lead:', error.message);
+      alert('Error al generar folio: ' + error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -275,8 +321,9 @@ export default function HomePage({ params }: PageProps) {
                   <label className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{t('ubicacion')}</label>
                   <select value={ubicacion} onChange={(e) => { setUbicacion(e.target.value); setUltimaAccion('ubicacion'); }} className="w-full bg-neutral-800 border border-neutral-700 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-white">
                     <option value="">{t('seleccionaDesarrollo')}</option>
-                    <option value="Costa Diamante">Costa Diamante (Cancún)</option>
-                    <option value="Selva Mágica">Selva Mágica (Tulum)</option>
+                    {proyectos.map(p => (
+                      <option key={p.id} value={p.nombre_desarrollo}>{p.nombre_desarrollo} ({p.ciudad})</option>
+                    ))}
                   </select>
                 </div>
 
