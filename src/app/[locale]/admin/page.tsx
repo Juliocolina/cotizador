@@ -10,6 +10,11 @@ interface Proyecto {
   ciudad: string;
   precio_m2_base: number;
   precio_m2_usd: number;
+  precio_m2_financiado: number;
+  precio_m2_usd_financiado: number;
+  enganche_minimo: number;
+  meses_msi: number;
+  lotes_disponibles: number;
   link_whatsapp: string | null;
   activo: boolean;
 }
@@ -45,7 +50,7 @@ export default function AdminDashboard() {
   const [selected, setSelected] = useState<Lead | null>(null);
   const [tab, setTab] = useState<'leads' | 'config'>('leads');
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
-  const [nuevoProyecto, setNuevoProyecto] = useState({ nombre_desarrollo: '', ciudad: '', precio_m2_base: 1500, precio_m2_usd: 85 });
+  const [nuevoProyecto, setNuevoProyecto] = useState({ nombre_desarrollo: '', ciudad: '', precio_m2_base: 1500, precio_m2_usd: 85, precio_m2_financiado: 2100, precio_m2_usd_financiado: 120, enganche_minimo: 0.01, meses_msi: 36, lotes_disponibles: 50 });
   const [guardando, setGuardando] = useState(false);
   const router = useRouter();
   const params = useParams();
@@ -76,7 +81,7 @@ export default function AdminDashboard() {
     const { data, error } = await supabase.from('configuracion_proyectos').insert([nuevoProyecto]).select().single();
     if (!error && data) {
       setProyectos(prev => [...prev, data]);
-      setNuevoProyecto({ nombre_desarrollo: '', ciudad: '', precio_m2_base: 1500, precio_m2_usd: 85 });
+      setNuevoProyecto({ nombre_desarrollo: '', ciudad: '', precio_m2_base: 1500, precio_m2_usd: 85, precio_m2_financiado: 2100, precio_m2_usd_financiado: 120, enganche_minimo: 0.01, meses_msi: 36, lotes_disponibles: 50 });
     }
   };
 
@@ -149,14 +154,15 @@ export default function AdminDashboard() {
       {tab === 'config' && (
         <div className="space-y-6 mb-6">
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
-            <h2 className="text-sm font-bold mb-4">Desarrollos y Precios por m²</h2>
+            <h2 className="text-sm font-bold mb-4">Desarrollos</h2>
             <div className="space-y-3 mb-4">
               {proyectos.map(p => (
-                <div key={p.id} className="bg-neutral-950 rounded-lg p-3 space-y-2">
+                <div key={p.id} className="bg-neutral-950 rounded-lg p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <span className={`text-sm ${p.activo ? 'text-white' : 'text-neutral-600 line-through'}`}>{p.nombre_desarrollo}</span>
-                      <span className="text-xs text-neutral-500 ml-2">({p.ciudad})</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-bold ${p.activo ? 'text-white' : 'text-neutral-600 line-through'}`}>{p.nombre_desarrollo}</span>
+                      <span className="text-xs text-neutral-500">({p.ciudad})</span>
+                      <span className="text-[10px] text-neutral-600 bg-neutral-800 px-2 py-0.5 rounded">{p.lotes_disponibles} lotes</span>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => toggleProyecto(p.id, !p.activo)} className={`text-[10px] px-2 py-1 rounded ${p.activo ? 'bg-green-500/20 text-green-400' : 'bg-neutral-800 text-neutral-500'}`}>
@@ -165,14 +171,44 @@ export default function AdminDashboard() {
                       <button onClick={() => eliminarProyecto(p.id)} className="text-[10px] px-2 py-1 rounded bg-red-500/20 text-red-400">Eliminar</button>
                     </div>
                   </div>
+
+                  <p className="text-[10px] text-neutral-500 font-semibold uppercase">Precio Contado (m²)</p>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] text-neutral-500">🇲🇽 MXN/m²</label>
+                      <label className="text-[10px] text-neutral-500">🇲🇽 MXN</label>
                       <input type="number" value={p.precio_m2_base} onChange={e => setProyectos(prev => prev.map(x => x.id === p.id ? { ...x, precio_m2_base: Number(e.target.value) } : x))} onBlur={() => guardarPrecio(p.id, 'precio_m2_base', p.precio_m2_base)} className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500 mt-1" />
                     </div>
                     <div>
-                      <label className="text-[10px] text-neutral-500">🇺🇸 USD/m²</label>
+                      <label className="text-[10px] text-neutral-500">🇺🇸 USD</label>
                       <input type="number" value={p.precio_m2_usd} onChange={e => setProyectos(prev => prev.map(x => x.id === p.id ? { ...x, precio_m2_usd: Number(e.target.value) } : x))} onBlur={() => guardarPrecio(p.id, 'precio_m2_usd', p.precio_m2_usd)} className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500 mt-1" />
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-neutral-500 font-semibold uppercase">Precio Financiado (m²)</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-neutral-500">🇲🇽 MXN</label>
+                      <input type="number" value={p.precio_m2_financiado} onChange={e => setProyectos(prev => prev.map(x => x.id === p.id ? { ...x, precio_m2_financiado: Number(e.target.value) } : x))} onBlur={() => guardarPrecio(p.id, 'precio_m2_financiado', p.precio_m2_financiado)} className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500 mt-1" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-neutral-500">🇺🇸 USD</label>
+                      <input type="number" value={p.precio_m2_usd_financiado} onChange={e => setProyectos(prev => prev.map(x => x.id === p.id ? { ...x, precio_m2_usd_financiado: Number(e.target.value) } : x))} onBlur={() => guardarPrecio(p.id, 'precio_m2_usd_financiado', p.precio_m2_usd_financiado)} className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500 mt-1" />
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-neutral-500 font-semibold uppercase">Reglas</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[10px] text-neutral-500">Enganche mín. %</label>
+                      <input type="number" value={Math.round(p.enganche_minimo * 100)} onChange={e => setProyectos(prev => prev.map(x => x.id === p.id ? { ...x, enganche_minimo: Number(e.target.value) / 100 } : x))} onBlur={() => guardarPrecio(p.id, 'enganche_minimo', p.enganche_minimo)} className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500 mt-1" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-neutral-500">Meses MSI</label>
+                      <input type="number" value={p.meses_msi} onChange={e => setProyectos(prev => prev.map(x => x.id === p.id ? { ...x, meses_msi: Number(e.target.value) } : x))} onBlur={() => guardarPrecio(p.id, 'meses_msi', p.meses_msi)} className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500 mt-1" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-neutral-500">Lotes disp.</label>
+                      <input type="number" value={p.lotes_disponibles} onChange={e => setProyectos(prev => prev.map(x => x.id === p.id ? { ...x, lotes_disponibles: Number(e.target.value) } : x))} onBlur={() => guardarPrecio(p.id, 'lotes_disponibles', p.lotes_disponibles)} className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500 mt-1" />
                     </div>
                   </div>
                 </div>
@@ -180,10 +216,9 @@ export default function AdminDashboard() {
             </div>
             <div className="border-t border-neutral-800 pt-4">
               <p className="text-xs text-neutral-400 mb-2">Agregar desarrollo</p>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <input placeholder="Nombre" value={nuevoProyecto.nombre_desarrollo} onChange={e => setNuevoProyecto({ ...nuevoProyecto, nombre_desarrollo: e.target.value })} className="bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500" />
                 <input placeholder="Ciudad" value={nuevoProyecto.ciudad} onChange={e => setNuevoProyecto({ ...nuevoProyecto, ciudad: e.target.value })} className="bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500" />
-                <input placeholder="MXN/m²" type="number" value={nuevoProyecto.precio_m2_base} onChange={e => setNuevoProyecto({ ...nuevoProyecto, precio_m2_base: Number(e.target.value) })} className="bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500" />
                 <button onClick={agregarProyecto} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-colors">+ Agregar</button>
               </div>
             </div>

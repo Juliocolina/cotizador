@@ -37,6 +37,7 @@ export async function POST(req: Request) {
           </div>
 
           <p style="color:#525252;font-size:11px;text-align:center;margin-top:24px;">Mi Sueño Mexicano — Tu trabajo merece raíces</p>
+          <p style="color:#404040;font-size:9px;text-align:center;margin-top:8px;">* Precios, plazos y condiciones sujetos a cambios sin previo aviso. Esta cotización es informativa y no constituye un contrato de compraventa.</p>
         </div>
       `,
     });

@@ -1,0 +1,132 @@
+MANUAL DE USO — MI SUEÑO MEXICANO
+====================================
+
+Hola Alfonso, aquí te explico cómo funciona todo el sistema.
+
+
+1. EL COTIZADOR (Lo que ve el cliente)
+========================================
+
+El cliente entra a la página y sigue estos pasos:
+
+PASO 0 — Mesa de Diseño:
+- Elige tipo de sueño (Casa, Lote habitacional o Negocio)
+- Elige el desarrollo (Costa Diamante, Selva Mágica, etc.)
+- Ajusta los metros cuadrados con el slider (140 a 500 m²)
+- Elige el plazo (Contado, 20 años o 30 años)
+- Elige el porcentaje de enganche (1%, 5% o 10%)
+- Puede cambiar entre pesos (MXN) o dólares (USD)
+- El panel de la derecha muestra el total, enganche, monto a financiar y mensualidad en tiempo real
+
+PASO 1 — Consentimiento de datos
+PASO 2 — El cliente pone su nombre y teléfono
+PASO 3 — El cliente pone su email y notas opcionales
+PASO 4 — Se genera el folio automáticamente y se le envía un correo con el resumen
+
+
+2. CÓMO SE CALCULA EL PRECIO
+==============================
+
+La fórmula es muy sencilla:
+
+   Total = Metros² × Precio por m²
+   Enganche = Total × Porcentaje de enganche
+   A financiar = Total - Enganche
+   Mensualidad = A financiar ÷ Meses del plazo
+
+IMPORTANTE: El precio por m² cambia según el plazo:
+- Si el cliente elige CONTADO → se usa el "Precio Contado"
+- Si el cliente elige 20 o 30 AÑOS → se usa el "Precio Financiado"
+
+Esto significa que el precio financiado ya incluye el costo del financiamiento.
+No hay una tasa de interés aparte, el precio ya viene "inflado".
+
+EJEMPLO:
+Desarrollo: Costa Diamante
+Metros: 150 m²
+Enganche: 10%
+Plazo: 20 años (240 meses)
+
+Precio Contado = $1,500/m²
+Precio Financiado = $2,100/m²
+
+Como eligió 20 años, se usa el precio financiado:
+
+   Total       = 150 × $2,100     = $315,000
+   Enganche    = $315,000 × 10%   = $31,500
+   A financiar = $315,000 - $31,500 = $283,500
+   Mensualidad = $283,500 ÷ 240   = $1,181
+
+Si el mismo cliente eligiera CONTADO:
+
+   Total = 150 × $1,500 = $225,000 (pago único)
+
+
+3. EL PANEL DE ADMINISTRACIÓN
+===============================
+
+Para entrar: ve a tu sitio web /es/admin/login
+Ejemplo: https://cotizador-nu-five.vercel.app/es/admin/login
+
+Ahí pones tu email y contraseña.
+
+El admin tiene 2 pestañas:
+
+--- PESTAÑA "LEADS" ---
+
+Aquí ves todos los clientes que generaron folio:
+- Fecha, nombre, email, ubicación, mensualidad, total, folio
+- Puedes cambiar el estatus de "Pendiente" a "Contactado"
+- Si haces clic en una fila, se abre un modal con TODOS los detalles:
+  tipo de sueño, metros, enganche, montos, IP, idioma, notas
+- Botón "Exportar CSV" para descargar la lista en Excel
+
+--- PESTAÑA "CONFIGURACIÓN" ---
+
+Aquí controlas los desarrollos y sus precios. Cada desarrollo tiene:
+
+PRECIOS:
+- Precio Contado MXN/m²: Lo que cobra por metro cuadrado si pagan de contado en pesos
+- Precio Contado USD/m²: Lo mismo pero en dólares
+- Precio Financiado MXN/m²: Lo que cobra por metro cuadrado si eligen plazo (20 o 30 años) en pesos
+- Precio Financiado USD/m²: Lo mismo pero en dólares
+
+REGLAS:
+- Enganche mín. %: El porcentaje mínimo de enganche que permites.
+  Si pones 10, los botones de 1% y 5% se bloquean y el cliente solo puede elegir 10%.
+  Si pones 1, todos los botones están disponibles (1%, 5%, 10%).
+
+- Meses MSI: Meses sin intereses (para referencia)
+
+- Lotes disp.: Cantidad de lotes disponibles en ese desarrollo
+
+ACCIONES:
+- Activo/Inactivo: Si desactivas un desarrollo, desaparece del cotizador sin eliminarlo
+- Eliminar: Borra el desarrollo permanentemente
+- + Agregar: Crea un nuevo desarrollo con nombre y ciudad
+
+IMPORTANTE: Los cambios que hagas aquí se reflejan INMEDIATAMENTE en el cotizador.
+Si cambias el precio de Costa Diamante de $1,500 a $1,800, el próximo cliente
+que entre al cotizador ya verá el precio nuevo.
+
+
+4. CORREO AUTOMÁTICO
+======================
+
+Cuando un cliente genera su folio, le llega un correo automático con:
+- Su nombre y folio
+- Resumen completo: tipo de sueño, ubicación, metros, total, enganche, plazo y mensualidad
+
+El correo se envía al email que el cliente puso en el paso 3.
+
+
+5. RESUMEN RÁPIDO
+==================
+
+¿Quieres cambiar precios? → Admin → Configuración → Edita el número y sal del campo
+¿Quieres agregar un desarrollo nuevo? → Admin → Configuración → "+ Agregar" abajo
+¿Quieres quitar un desarrollo temporalmente? → Ponlo en "Inactivo"
+¿Quieres ver los leads? → Admin → Leads
+¿Quieres descargar los leads? → Admin → Leads → "Exportar CSV"
+¿Quieres ver el detalle de un lead? → Haz clic en la fila
+¿Quieres bloquear enganche bajo? → Sube el "Enganche mín. %" (ej: pon 10)

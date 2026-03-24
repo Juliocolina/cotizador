@@ -11,6 +11,11 @@ interface Proyecto {
   ciudad: string;
   precio_m2_base: number;
   precio_m2_usd: number;
+  precio_m2_financiado: number;
+  precio_m2_usd_financiado: number;
+  enganche_minimo: number;
+  meses_msi: number;
+  lotes_disponibles: number;
 }
 
 interface PageProps {
@@ -51,7 +56,14 @@ export default function HomePage({ params }: PageProps) {
 
   const mesesFinal = obtenerMeses();
 
-  const precioM2 = proyectoActual ? (moneda === 'MXN' ? proyectoActual.precio_m2_base : proyectoActual.precio_m2_usd) : (moneda === 'MXN' ? 1500 : 85);
+  const esFinanciado = plazoTipo !== '' && plazoTipo !== 'contado';
+  const engancheMinimo = proyectoActual?.enganche_minimo ?? 0.10;
+
+  const precioM2 = proyectoActual
+    ? (moneda === 'MXN'
+      ? (esFinanciado ? proyectoActual.precio_m2_financiado : proyectoActual.precio_m2_base)
+      : (esFinanciado ? proyectoActual.precio_m2_usd_financiado : proyectoActual.precio_m2_usd))
+    : (moneda === 'MXN' ? 1500 : 85);
   const total = metros * precioM2;
   const engancheEfectivo = total * porcentajeEnganche;
   const montoAFinanciar = total - engancheEfectivo;
@@ -322,7 +334,9 @@ export default function HomePage({ params }: PageProps) {
                   <select value={ubicacion} onChange={(e) => { setUbicacion(e.target.value); setUltimaAccion('ubicacion'); }} className="w-full bg-neutral-800 border border-neutral-700 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-white">
                     <option value="">{t('seleccionaDesarrollo')}</option>
                     {proyectos.map(p => (
-                      <option key={p.id} value={p.nombre_desarrollo}>{p.nombre_desarrollo} ({p.ciudad})</option>
+                      <option key={p.id} value={p.nombre_desarrollo} disabled={p.lotes_disponibles <= 0}>
+                        {p.nombre_desarrollo} ({p.ciudad}){p.lotes_disponibles <= 0 ? ' — Agotado' : ''}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -362,7 +376,7 @@ export default function HomePage({ params }: PageProps) {
                   <label className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{t('enganche')}</label>
                   <div className="grid grid-cols-3 gap-1.5">
                     {[0.01, 0.05, 0.10].map((pct) => (
-                      <button key={pct} onClick={() => { setPorcentajeEnganche(pct); setUltimaAccion('enganche'); }} className={`py-2 rounded-xl text-xs font-bold border transition-all ${porcentajeEnganche === pct ? 'bg-blue-600 border-blue-400 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-500'}`}>
+                      <button key={pct} disabled={pct < engancheMinimo} onClick={() => { setPorcentajeEnganche(pct); setUltimaAccion('enganche'); }} className={`py-2 rounded-xl text-xs font-bold border transition-all ${porcentajeEnganche === pct ? 'bg-blue-600 border-blue-400 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-500'} disabled:opacity-20 disabled:cursor-not-allowed`}>
                         {pct * 100}%
                       </button>
                     ))}
@@ -506,6 +520,9 @@ export default function HomePage({ params }: PageProps) {
                 <div className="px-4 space-y-4">
                   <p className="text-sm text-neutral-400 leading-relaxed">
                     Agradecemos tu confianza en <span className="text-white font-bold">Mi Sueño Mexicano</span>. Revisa tu correo electrónico donde encontrarás más información detallada.
+                  </p>
+                  <p className="text-[9px] text-neutral-600 leading-relaxed mt-2">
+                    * Precios, plazos y condiciones sujetos a cambios sin previo aviso. Esta cotización es informativa y no constituye un contrato de compraventa.
                   </p>
                 </div>
               </div>
