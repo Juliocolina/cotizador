@@ -32,6 +32,8 @@ export default function HomePage({ params }: PageProps) {
   useEffect(() => {
     supabase.from('configuracion_proyectos').select('*').eq('activo', true).order('nombre_desarrollo')
       .then(({ data }) => { if (data) setProyectos(data); });
+    supabase.from('menu_items').select('*').eq('activo', true).order('orden')
+      .then(({ data }) => { if (data) setMenuItems(data); });
   }, []);
 
   // --- 1. ESTADOS DE LA MESA DE DISEÑO (JUEGO) ---
@@ -84,6 +86,7 @@ export default function HomePage({ params }: PageProps) {
   const [esMismoWhatsApp, setEsMismoWhatsApp] = useState(true);
   const [loading, setLoading] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [menuItems, setMenuItems] = useState<{id:number;label:string;url:string|null;parent_id:number|null;orden:number;activo:boolean}[]>([]);
   const [idiomaAbierto, setIdiomaAbierto] = useState(false);
   const [resultado, setResultado] = useState<{ folio_texto: string } | null>(null);
 
@@ -221,23 +224,21 @@ export default function HomePage({ params }: PageProps) {
           <div className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${menuAbierto ? 'opacity-100' : 'opacity-0'}`} onClick={() => setMenuAbierto(false)} />
           <div className={`absolute top-0 left-0 h-full w-64 bg-neutral-900 border-r border-neutral-800 p-6 space-y-4 transition-transform duration-300 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
             <button onClick={() => setMenuAbierto(false)} className="text-neutral-500 hover:text-white text-2xl font-bold mb-4">✕</button>
-            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.servicio')}</a>
-            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.hogar')}</a>
-            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.cotizacion')}</a>
-            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.contacto')}</a>
-            <div className="h-px bg-neutral-800" />
-            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.quienes')}</a>
-            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.ciudadMadera')}</a>
-            <a href="#" onClick={() => setMenuAbierto(false)} className="block text-lg text-neutral-400 hover:text-white transition-all">{t('menu.razones')}</a>
-            <div className="h-px bg-neutral-800" />
-            <div className="flex gap-4">
-              <a href="https://tiktok.com/@misuenomexicano" target="_blank" className="text-neutral-400 hover:text-white transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.7a8.18 8.18 0 0 0 4.76 1.52v-3.4a4.85 4.85 0 0 1-1-.13z"/></svg>
-              </a>
-              <a href="https://youtube.com/@misuenomexicano" target="_blank" className="text-neutral-400 hover:text-white transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg>
-              </a>
-            </div>
+            {menuItems.filter(m => !m.parent_id).map(item => {
+              const hijos = menuItems.filter(m => m.parent_id === item.id);
+              return (
+                <div key={item.id}>
+                  {item.url && item.url !== '#' ? (
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" onClick={() => setMenuAbierto(false)} className="block text-xs text-neutral-400 hover:text-white transition-all">{item.label}</a>
+                  ) : (
+                    <span className="block text-xs text-white font-bold">{item.label}</span>
+                  )}
+                  {hijos.map(h => (
+                    <a key={h.id} href={h.url || '#'} target={h.url && h.url !== '#' ? '_blank' : undefined} rel="noopener noreferrer" onClick={() => setMenuAbierto(false)} className="block text-[10px] text-neutral-500 hover:text-white transition-all pl-4 py-1">{h.label}</a>
+                  ))}
+                </div>
+              );
+            })}
           </div>
         </div>
 

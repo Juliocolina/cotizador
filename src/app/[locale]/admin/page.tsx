@@ -19,6 +19,15 @@ interface Proyecto {
   activo: boolean;
 }
 
+interface MenuItem {
+  id: number;
+  label: string;
+  url: string | null;
+  parent_id: number | null;
+  orden: number;
+  activo: boolean;
+}
+
 interface Lead {
   id: number;
   folio_texto: string;
@@ -48,8 +57,10 @@ export default function AdminDashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Lead | null>(null);
-  const [tab, setTab] = useState<'leads' | 'config'>('leads');
+  const [tab, setTab] = useState<'leads' | 'config' | 'menu'>('leads');
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [nuevoMenu, setNuevoMenu] = useState({ label: '', url: '', parent_id: null as number | null, orden: 0 });
   const [nuevoProyecto, setNuevoProyecto] = useState({ nombre_desarrollo: '', ciudad: '', precio_m2_base: 1500, precio_m2_usd: 85, precio_m2_financiado: 2100, precio_m2_usd_financiado: 120, enganche_minimo: 0.01, meses_msi: 36, lotes_disponibles: 50 });
   const [guardando, setGuardando] = useState(false);
   const router = useRouter();
@@ -60,11 +71,13 @@ export default function AdminDashboard() {
     let ignore = false;
     Promise.all([
       supabase.from('leads_cotizaciones').select('*').order('creado_en', { ascending: false }),
-      supabase.from('configuracion_proyectos').select('*').order('nombre_desarrollo')
-    ]).then(([leadsRes, proyRes]) => {
+      supabase.from('configuracion_proyectos').select('*').order('nombre_desarrollo'),
+      supabase.from('menu_items').select('*').order('orden')
+    ]).then(([leadsRes, proyRes, menuRes]) => {
       if (ignore) return;
       if (!leadsRes.error && leadsRes.data) setLeads(leadsRes.data);
       if (!proyRes.error && proyRes.data) setProyectos(proyRes.data);
+      if (!menuRes.error && menuRes.data) setMenuItems(menuRes.data);
       setLoading(false);
     });
     return () => { ignore = true; };
@@ -93,6 +106,29 @@ export default function AdminDashboard() {
   const eliminarProyecto = async (id: string) => {
     await supabase.from('configuracion_proyectos').delete().eq('id', id);
     setProyectos(prev => prev.filter(p => p.id !== id));
+  };
+
+  const agregarMenu = async () => {
+    if (!nuevoMenu.label) return;
+    const { data, error } = await supabase.from('menu_items').insert([{ ...nuevoMenu, url: nuevoMenu.url || null }]).select().single();
+    if (!error && data) {
+      setMenuItems(prev => [...prev, data]);
+      setNuevoMenu({ label: '', url: '', parent_id: null, orden: 0 });
+    }
+  };
+
+  const guardarMenu = async (id: number, campo: string, valor: string | number | boolean | null) => {
+    await supabase.from('menu_items').update({ [campo]: valor }).eq('id', id);
+  };
+
+  const toggleMenu = async (id: number, activo: boolean) => {
+    await supabase.from('menu_items').update({ activo }).eq('id', id);
+    setMenuItems(prev => prev.map(m => m.id === id ? { ...m, activo } : m));
+  };
+
+  const eliminarMenu = async (id: number) => {
+    await supabase.from('menu_items').delete().eq('id', id);
+    setMenuItems(prev => prev.filter(m => m.id !== id));
   };
 
   const updateEstatus = async (id: number, estatus: string) => {
@@ -146,10 +182,44 @@ export default function AdminDashboard() {
         <div className="flex gap-2">
           <button onClick={() => setTab('leads')} className={`text-xs px-4 py-2 rounded-lg border transition-colors ${tab === 'leads' ? 'bg-blue-600 border-blue-500' : 'bg-neutral-800 border-neutral-700 hover:bg-neutral-700'}`}>Leads</button>
           <button onClick={() => setTab('config')} className={`text-xs px-4 py-2 rounded-lg border transition-colors ${tab === 'config' ? 'bg-blue-600 border-blue-500' : 'bg-neutral-800 border-neutral-700 hover:bg-neutral-700'}`}>Configuración</button>
+          <button onClick={() => setTab('menu')} className={`text-xs px-4 py-2 rounded-lg border transition-colors ${tab === 'menu' ? 'bg-blue-600 border-blue-500' : 'bg-neutral-800 border-neutral-700 hover:bg-neutral-700'}`}>Menú</button>
           <button onClick={exportarCSV} className="text-xs bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-4 py-2 rounded-lg transition-colors">📥 CSV</button>
           <button onClick={logout} className="text-xs bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-4 py-2 rounded-lg transition-colors">Salir</button>
         </div>
       </div>
+
+      {tab === 'menu' && (
+        <div className="space-y-6 mb-6">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+            <h2 className="text-sm font-bold mb-4">Menú del sitio</h2>
+            <div className="space-y-2 mb-4">
+              {menuItems.map(m => (
+                <div key={m.id} className="bg-neutral-950 rounded-lg p-3 flex items-center gap-3">
+                  <input type="number" value={m.orden} onChange={e => { const v = Number(e.target.value); setMenuItems(prev => prev.map(x => x.id === m.id ? { ...x, orden: v } : x)); }} onBlur={() => guardarMenu(m.id, 'orden', m.orden)} className="w-12 bg-neutral-900 border border-neutral-800 rounded p-1 text-xs text-center text-white outline-none" />
+                  <input value={m.label} onChange={e => setMenuItems(prev => prev.map(x => x.id === m.id ? { ...x, label: e.target.value } : x))} onBlur={() => guardarMenu(m.id, 'label', m.label)} className="flex-1 bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input value={m.url || ''} placeholder="https://..." onChange={e => setMenuItems(prev => prev.map(x => x.id === m.id ? { ...x, url: e.target.value } : x))} onBlur={() => guardarMenu(m.id, 'url', m.url)} className="flex-1 bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-neutral-400 outline-none focus:ring-2 focus:ring-blue-500" />
+                  <select value={m.parent_id ?? ''} onChange={e => { const v = e.target.value ? Number(e.target.value) : null; setMenuItems(prev => prev.map(x => x.id === m.id ? { ...x, parent_id: v } : x)); guardarMenu(m.id, 'parent_id', v); }} className="bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none w-28">
+                    <option value="">Raíz</option>
+                    {menuItems.filter(x => x.id !== m.id && !x.parent_id).map(x => (
+                      <option key={x.id} value={x.id}>↳ {x.label}</option>
+                    ))}
+                  </select>
+                  <button onClick={() => toggleMenu(m.id, !m.activo)} className={`text-[10px] px-2 py-1 rounded ${m.activo ? 'bg-green-500/20 text-green-400' : 'bg-neutral-800 text-neutral-500'}`}>{m.activo ? 'On' : 'Off'}</button>
+                  <button onClick={() => eliminarMenu(m.id)} className="text-[10px] px-2 py-1 rounded bg-red-500/20 text-red-400">X</button>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-neutral-800 pt-4">
+              <p className="text-xs text-neutral-400 mb-2">Agregar item</p>
+              <div className="flex gap-2">
+                <input placeholder="Nombre" value={nuevoMenu.label} onChange={e => setNuevoMenu({ ...nuevoMenu, label: e.target.value })} className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                <input placeholder="https://... (opcional)" value={nuevoMenu.url} onChange={e => setNuevoMenu({ ...nuevoMenu, url: e.target.value })} className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-xs text-neutral-400 outline-none focus:ring-2 focus:ring-blue-500" />
+                <button onClick={agregarMenu} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 rounded-lg transition-colors">+ Agregar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {tab === 'config' && (
         <div className="space-y-6 mb-6">
