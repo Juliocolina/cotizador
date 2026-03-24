@@ -162,7 +162,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center gap-2">
                       <span className={`text-sm font-bold ${p.activo ? 'text-white' : 'text-neutral-600 line-through'}`}>{p.nombre_desarrollo}</span>
                       <span className="text-xs text-neutral-500">({p.ciudad})</span>
-                      <span className="text-[10px] text-neutral-600 bg-neutral-800 px-2 py-0.5 rounded">{p.lotes_disponibles} lotes</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded ${p.lotes_disponibles <= 0 ? 'bg-red-500/20 text-red-400 animate-pulse' : p.lotes_disponibles <= 5 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-neutral-800 text-neutral-600'}`}>{p.lotes_disponibles <= 0 ? 'AGOTADO' : `${p.lotes_disponibles} lotes`}</span>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => toggleProyecto(p.id, !p.activo)} className={`text-[10px] px-2 py-1 rounded ${p.activo ? 'bg-green-500/20 text-green-400' : 'bg-neutral-800 text-neutral-500'}`}>

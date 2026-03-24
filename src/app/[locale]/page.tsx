@@ -56,6 +56,8 @@ export default function HomePage({ params }: PageProps) {
 
   const mesesFinal = obtenerMeses();
 
+  const hayDisponibilidad = proyectoActual ? proyectoActual.lotes_disponibles > 0 : true;
+
   const esFinanciado = plazoTipo !== '' && plazoTipo !== 'contado';
   const engancheMinimo = proyectoActual?.enganche_minimo ?? 0.10;
 
@@ -384,7 +386,7 @@ export default function HomePage({ params }: PageProps) {
                 </div>
               </div>
 
-              <button disabled={!tipoSueño || !ubicacion || !plazoTipo || porcentajeEnganche === 0} onClick={() => setPasoActual(1)} className="w-full bg-white text-black py-3 rounded-xl text-sm font-black uppercase tracking-tighter hover:bg-blue-500 hover:text-white transition-all disabled:opacity-20 active:scale-95 shadow-xl">{t('botonFolio')}</button>
+              <button disabled={!tipoSueño || !ubicacion || !plazoTipo || porcentajeEnganche === 0 || !hayDisponibilidad} onClick={() => setPasoActual(1)} className="w-full bg-white text-black py-3 rounded-xl text-sm font-black uppercase tracking-tighter hover:bg-blue-500 hover:text-white transition-all disabled:opacity-20 active:scale-95 shadow-xl">{hayDisponibilidad ? t('botonFolio') : 'AGOTADO'}</button>
             </div>
           )}
 
